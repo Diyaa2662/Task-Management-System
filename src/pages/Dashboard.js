@@ -74,10 +74,10 @@ function Dashboard() {
       {/* زر الإضافة */}
       <div className="mt-6 text-center">
         <Link
-          to="/tasks/new"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition"
+          to="/tasks"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
         >
-          + إضافة مهمة جديدة
+          الانتقال إلى المهام
         </Link>
       </div>
     </div>
