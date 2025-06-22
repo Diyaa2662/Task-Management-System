@@ -11,7 +11,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
 
   return (
     <header className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white shadow px-6 py-4 flex justify-between items-center fixed top-0 right-0 left-0 z-50">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-8">
         <button
           onClick={onToggleSidebar}
           className="text-2xl hover:text-blue-600"
@@ -20,10 +20,35 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
         </button>
         <Link
           to="/dashboard"
-          className="text-xl font-bold text-blue-600 dark:text-blue-400"
+          className="text-4xl font-bold text-blue-600 dark:text-blue-400"
         >
           TaskFlow
         </Link>
+        <Link
+          to="/tasks"
+          className="text-lg font-bold text-blue-600 dark:text-blue-400"
+        >
+          المهام
+        </Link>
+        <Link
+          to="/groups"
+          className="text-lg font-bold text-blue-600 dark:text-blue-400"
+        >
+          المجموعات
+        </Link>
+      </div>
+
+      <div className="flex items-center gap-8">
+        <button
+          onClick={onToggleTheme}
+          className="text-xl hover:scale-110 transition"
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
+
+        <button onClick={handleLogout} className="text-sm hover:text-red-600">
+          تسجيل الخروج
+        </button>
         <Link to="/profile" title="الملف الشخصي">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -40,21 +65,6 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
             />
           </svg>
         </Link>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onToggleTheme}
-          className="text-xl hover:scale-110 transition"
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
-
-        <span className="text-sm hidden md:inline">مرحبًا، المستخدم</span>
-
-        <button onClick={handleLogout} className="text-sm hover:text-red-600">
-          تسجيل الخروج
-        </button>
       </div>
     </header>
   );
