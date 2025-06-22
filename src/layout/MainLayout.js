@@ -4,7 +4,6 @@ import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
 function MainLayout() {
-  // ✅ الثيم
   const [darkMode, setDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
@@ -21,9 +20,17 @@ function MainLayout() {
     localStorage.setItem("theme", newMode ? "dark" : "light");
   };
 
-  // ✅ الشريط الجانبي
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
+  // ✅ حالة لكشف إذا الشاشة صغيرة
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div className="bg-gray-100 dark:bg-gray-900 pt-16 min-h-screen relative transition-all">
@@ -32,14 +39,20 @@ function MainLayout() {
         onToggleTheme={toggleTheme}
         darkMode={darkMode}
       />
+
+      {/* ✅ الشريط الجانبي كـ Overlay على الموبايل */}
       <Sidebar
         isOpen={sidebarOpen}
         onToggleTheme={toggleTheme}
         darkMode={darkMode}
+        isMobile={isMobile}
+        onClose={() => setSidebarOpen(false)}
       />
+
+      {/* ✅ main لا يتحرك في حالة الموبايل */}
       <main
         className={`p-6 transition-all duration-300 ${
-          sidebarOpen ? "mr-64" : "mr-0"
+          sidebarOpen && !isMobile ? "mr-64" : ""
         }`}
       >
         <Outlet />
