@@ -18,6 +18,7 @@ import MemberDetails from "./pages/MemberDetails";
 import Categories from "./pages/Categories";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import GroupAddTask from "./pages/GroupAddTask";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
           <Route path="/groups/:id/edit" element={<EditGroup />} />
           <Route path="/groups/:id" element={<GroupDetails />} />
           <Route path="/groups/:id/add-member" element={<AddMember />} />
+          <Route path="/groups/:id/add-task" element={<GroupAddTask />} />
           <Route
             path="/groups/:id/members/:memberId"
             element={<MemberDetails />}

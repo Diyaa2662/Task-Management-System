@@ -4,7 +4,10 @@ import { useParams, Link } from "react-router-dom";
 function GroupDetails() {
   const { id } = useParams();
 
-  // بيانات وهمية مؤقتة
+  // ✅ الدور الحالي للمستخدم داخل المجموعة (لاحقًا من backend)
+  const currentUserRole = "Owner"; // مثال: "Admin", "Manager", "Assignee"
+
+  // ✅ بيانات وهمية للمجموعة
   const group = {
     id,
     name: "فريق التصميم",
@@ -34,7 +37,7 @@ function GroupDetails() {
         تفاصيل المجموعة: {group.name}
       </h2>
 
-      {/* الأعضاء */}
+      {/* ✅ الأعضاء */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           الأعضاء:
@@ -58,19 +61,21 @@ function GroupDetails() {
                 >
                   عرض
                 </Link>
-                <button
-                  onClick={() => handleDeleteMember(index)}
-                  className="text-sm text-red-600 hover:underline"
-                >
-                  حذف
-                </button>
+                {can(currentUserRole, "manageMembers") && (
+                  <button
+                    onClick={() => handleDeleteMember(index)}
+                    className="text-sm text-red-600 hover:underline"
+                  >
+                    حذف
+                  </button>
+                )}
               </div>
             </li>
           ))}
         </ul>
       </div>
 
-      {/* المهام */}
+      {/* ✅ المهام */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           المهام:
@@ -90,32 +95,47 @@ function GroupDetails() {
         </ul>
       </div>
 
-      {/* الأزرار */}
+      {/* ✅ الأزرار */}
       <div className="flex flex-wrap gap-3 justify-between mt-6">
-        <Link
-          to={`/groups/${group.id}/edit`}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
-          تعديل المجموعة
-        </Link>
+        {can(currentUserRole, "manageTasks") && (
+          <Link
+            to={`/groups/${group.id}/add-task`}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            + إضافة مهمة
+          </Link>
+        )}
 
-        <Link
-          to={`/groups/${group.id}/add-member`}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-        >
-          + إضافة عضو
-        </Link>
+        {can(currentUserRole, "manageMembers") && (
+          <Link
+            to={`/groups/${group.id}/add-member`}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            + إضافة عضو
+          </Link>
+        )}
 
-        <button
-          onClick={() => {
-            if (window.confirm("هل أنت متأكد من حذف هذه المجموعة؟")) {
-              alert("تم حذف المجموعة (لاحقًا يتم الربط مع قاعدة البيانات)");
-            }
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-        >
-          حذف المجموعة
-        </button>
+        {can(currentUserRole, "editGroup") && (
+          <Link
+            to={`/groups/${group.id}/edit`}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            تعديل المجموعة
+          </Link>
+        )}
+
+        {can(currentUserRole, "deleteGroup") && (
+          <button
+            onClick={() => {
+              if (window.confirm("هل أنت متأكد من حذف هذه المجموعة؟")) {
+                alert("تم حذف المجموعة (لاحقًا يتم الربط مع قاعدة البيانات)");
+              }
+            }}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+          >
+            حذف المجموعة
+          </button>
+        )}
 
         <Link
           to="/groups"
@@ -128,7 +148,7 @@ function GroupDetails() {
   );
 }
 
-// ✅ دالة ترجمة الأدوار للعرض بالعربية
+// ✅ دالة ترجمة الدور
 function translateRole(role) {
   switch (role) {
     case "Owner":
@@ -142,6 +162,17 @@ function translateRole(role) {
     default:
       return role;
   }
+}
+
+// ✅ دالة صلاحيات حسب الدور
+function can(role, action) {
+  const permissions = {
+    Owner: ["manageMembers", "manageTasks", "deleteGroup", "editGroup"],
+    Admin: ["manageMembers", "manageTasks"],
+    Manager: ["manageTasks"],
+    Assignee: [],
+  };
+  return permissions[role]?.includes(action);
 }
 
 export default GroupDetails;

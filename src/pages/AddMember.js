@@ -8,6 +8,7 @@ function AddMember() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    role: "assignee", // القيمة الابتدائية: مكلف
   });
 
   const handleChange = (e) => {
@@ -28,6 +29,7 @@ function AddMember() {
         </h2>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
+          {/* الاسم */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               اسم العضو
@@ -43,6 +45,7 @@ function AddMember() {
             />
           </div>
 
+          {/* البريد */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               البريد الإلكتروني (اختياري)
@@ -57,6 +60,25 @@ function AddMember() {
             />
           </div>
 
+          {/* الدور */}
+          <div>
+            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
+              الدور داخل المجموعة
+            </label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+            >
+              <option value="owner">مالك المجموعة</option>
+              <option value="admin">مدير المجموعة</option>
+              <option value="manager">إداري المجموعة</option>
+              <option value="assignee">مكلف (عضو عادي)</option>
+            </select>
+          </div>
+
+          {/* الأزرار */}
           <div className="flex justify-between gap-4 mt-4">
             <button
               type="submit"
