@@ -1,7 +1,18 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function Sidebar({ isOpen, onToggleTheme, darkMode }) {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const links = [
+    { path: "/dashboard", label: "لوحة التحكم" },
+    { path: "/tasks", label: "المهام" },
+    { path: "/groups", label: "المجموعات" },
+    { path: "/categories", label: "الفئات" },
+    { path: "/profile", label: "الملف الشخصي" },
+  ];
+
   return (
     <div
       className={`fixed top-16 right-0 h-full bg-white dark:bg-gray-800 shadow-lg border-l z-40 transition-transform duration-300 ease-in-out ${
@@ -14,21 +25,20 @@ function Sidebar({ isOpen, onToggleTheme, darkMode }) {
             القائمة
           </h2>
           <nav className="flex flex-col gap-3 text-right">
-            <Link to="/dashboard" className="hover:text-blue-600">
-              لوحة التحكم
-            </Link>
-            <Link to="/tasks" className="hover:text-blue-600">
-              المهام
-            </Link>
-            <Link to="/groups" className="hover:text-blue-600">
-              المجموعات
-            </Link>
-            <Link to="/categories" className="hover:text-blue-600">
-              الفئات
-            </Link>
-            <Link to="/profile" className="hover:text-blue-600">
-              الملف الشخصي
-            </Link>
+            {links.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`border rounded px-4 py-2 transition-colors
+                  ${
+                    currentPath === link.path
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
 
