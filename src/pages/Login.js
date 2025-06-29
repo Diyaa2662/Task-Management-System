@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { login } from "../utils/auth"; // ✅ استيراد الدالة
 
 function Login() {
   const navigate = useNavigate();
 
-  // ✅ القراءة من localStorage
   const [darkMode, setDarkMode] = useState(() => {
     const storedTheme = localStorage.getItem("theme");
     return storedTheme === "dark";
+  });
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
   });
 
   const toggleTheme = () => {
@@ -16,25 +21,33 @@ function Login() {
     localStorage.setItem("theme", newMode ? "dark" : "light");
   };
 
-  // ✅ تطبيق كلاس الثيم على <html>
   useEffect(() => {
     const html = document.documentElement;
-    if (darkMode) {
-      html.classList.add("dark");
-    } else {
-      html.classList.remove("dark");
-    }
+    darkMode ? html.classList.add("dark") : html.classList.remove("dark");
   }, [darkMode]);
 
-  // محاكاة تسجيل الدخول والانتقال إلى لوحة التحكم
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
+
+    // ✅ تسجيل الدخول الوهمي
+    const fakeUser = {
+      name: "ضياء التويل",
+      email: formData.email,
+    };
+
+    login(fakeUser);
     navigate("/dashboard");
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 px-4 transition-colors">
-      {/* زر الثيم في الأعلى */}
       <button
         onClick={toggleTheme}
         className="absolute top-4 left-4 text-2xl hover:scale-110 transition"
@@ -52,6 +65,10 @@ function Login() {
             </label>
             <input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
               className="w-full p-3 border rounded-md text-right dark:bg-gray-700 dark:text-white"
               placeholder="example@email.com"
             />
@@ -60,6 +77,10 @@ function Login() {
             <label className="block text-right text-sm mb-1">كلمة المرور</label>
             <input
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
               className="w-full p-3 border rounded-md text-right dark:bg-gray-700 dark:text-white"
               placeholder="••••••••"
             />

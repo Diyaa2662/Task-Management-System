@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { login } from "../utils/auth"; // ✅ استيراد login
 
 function Register() {
   const navigate = useNavigate();
 
-  // ✅ قراءة التفضيل من localStorage
   const [darkMode, setDarkMode] = useState(() => {
     const storedTheme = localStorage.getItem("theme");
     return storedTheme === "dark";
   });
+
+  useEffect(() => {
+    const html = document.documentElement;
+    darkMode ? html.classList.add("dark") : html.classList.remove("dark");
+  }, [darkMode]);
 
   const toggleTheme = () => {
     const newMode = !darkMode;
@@ -16,24 +21,39 @@ function Register() {
     localStorage.setItem("theme", newMode ? "dark" : "light");
   };
 
-  useEffect(() => {
-    const html = document.documentElement;
-    if (darkMode) {
-      html.classList.add("dark");
-    } else {
-      html.classList.remove("dark");
-    }
-  }, [darkMode]);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-  // محاكاة إنشاء الحساب والانتقال إلى لوحة التحكم
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const handleRegister = (e) => {
     e.preventDefault();
+
+    // ✅ التحقق البسيط لاحقًا ممكن إضافة تحقق أعمق
+    if (formData.password !== formData.confirmPassword) {
+      alert("كلمتا المرور غير متطابقتين");
+      return;
+    }
+
+    const user = {
+      id: Date.now(),
+      name: formData.name,
+      email: formData.email,
+      role: "owner",
+    };
+
+    login(user);
     navigate("/dashboard");
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 px-4 transition-colors">
-      {/* زر تغيير الثيم */}
       <button
         onClick={toggleTheme}
         className="absolute top-4 left-4 text-2xl hover:scale-110 transition"
@@ -51,6 +71,10 @@ function Register() {
             </label>
             <input
               type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
               className="w-full p-3 border rounded-md text-right dark:bg-gray-700 dark:text-white"
               placeholder="الاسم الكامل"
             />
@@ -62,6 +86,10 @@ function Register() {
             </label>
             <input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
               className="w-full p-3 border rounded-md text-right dark:bg-gray-700 dark:text-white"
               placeholder="example@email.com"
             />
@@ -71,6 +99,10 @@ function Register() {
             <label className="block text-right text-sm mb-1">كلمة المرور</label>
             <input
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
               className="w-full p-3 border rounded-md text-right dark:bg-gray-700 dark:text-white"
               placeholder="••••••••"
             />
@@ -82,6 +114,10 @@ function Register() {
             </label>
             <input
               type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
               className="w-full p-3 border rounded-md text-right dark:bg-gray-700 dark:text-white"
               placeholder="••••••••"
             />

@@ -1,24 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUser } from "../utils/auth";
 
 function EditProfile() {
   const navigate = useNavigate();
 
-  // بيانات مبدئية مؤقتة (لاحقًا تُجلب من الـ backend)
-  const [formData, setFormData] = useState({
-    name: "أحمد علي",
-    email: "ahmed@example.com",
-  });
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [loading, setLoading] = useState(true); // لحماية الصفحة من إعادة التهيئة
+
+  useEffect(() => {
+    const user = getCurrentUser();
+
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+      });
+    }
+
+    setLoading(false);
+  }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("تم حفظ التعديلات:", formData);
+
+    localStorage.setItem("currentUser", JSON.stringify(formData));
     navigate("/profile");
   };
+
+  const handleCancel = () => {
+    navigate("/profile");
+  };
+
+  if (loading) return null;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center text-right">
@@ -59,7 +80,7 @@ function EditProfile() {
           <div className="flex justify-between mt-6">
             <button
               type="button"
-              onClick={() => navigate("/profile")}
+              onClick={handleCancel}
               className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition"
             >
               إلغاء

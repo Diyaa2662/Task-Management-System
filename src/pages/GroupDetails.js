@@ -8,7 +8,11 @@ function GroupDetails() {
   const group = {
     id,
     name: "فريق التصميم",
-    members: ["أحمد", "سارة", "مريم"],
+    members: [
+      { name: "أحمد", role: "Owner" },
+      { name: "سارة", role: "Admin" },
+      { name: "مريم", role: "Assignee" },
+    ],
     tasks: [
       { id: 1, title: "تصميم صفحة تسجيل الدخول", status: "قيد التنفيذ" },
       { id: 2, title: "تحسين واجهة لوحة التحكم", status: "مكتملة" },
@@ -41,7 +45,12 @@ function GroupDetails() {
               key={index}
               className="bg-gray-100 dark:bg-gray-700 p-3 rounded flex justify-between items-center"
             >
-              <span>{member}</span>
+              <div>
+                <span className="font-semibold">{member.name}</span>{" "}
+                <span className="text-sm text-gray-500 dark:text-gray-300">
+                  ({translateRole(member.role)})
+                </span>
+              </div>
               <div className="flex gap-3">
                 <Link
                   to={`/groups/${group.id}/members/${index}`}
@@ -82,7 +91,7 @@ function GroupDetails() {
       </div>
 
       {/* الأزرار */}
-      <div className="flex justify-between mt-6">
+      <div className="flex flex-wrap gap-3 justify-between mt-6">
         <Link
           to={`/groups/${group.id}/edit`}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
@@ -107,6 +116,7 @@ function GroupDetails() {
         >
           حذف المجموعة
         </button>
+
         <Link
           to="/groups"
           className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition"
@@ -116,6 +126,22 @@ function GroupDetails() {
       </div>
     </div>
   );
+}
+
+// ✅ دالة ترجمة الأدوار للعرض بالعربية
+function translateRole(role) {
+  switch (role) {
+    case "Owner":
+      return "مالك المجموعة";
+    case "Admin":
+      return "مدير المجموعة";
+    case "Manager":
+      return "إداري المجموعة";
+    case "Assignee":
+      return "مكلف";
+    default:
+      return role;
+  }
 }
 
 export default GroupDetails;

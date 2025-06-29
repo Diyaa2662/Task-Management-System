@@ -1,10 +1,14 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { getCurrentUser, logout } from "../utils/auth"; // ✅ استيراد الدوال
 
 function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
   const navigate = useNavigate();
 
+  const user = getCurrentUser();
+
   const handleLogout = () => {
+    logout();
     navigate("/");
   };
 
@@ -53,13 +57,22 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
           {darkMode ? "☀️" : "🌙"}
         </button>
 
+        {/* اسم المستخدم - إذا كان موجودًا */}
+        {user && (
+          <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
+            {user.name}
+          </span>
+        )}
+
         {/* زر تسجيل الخروج - فقط على الشاشات الكبيرة */}
-        <button
-          onClick={handleLogout}
-          className="text-sm hover:text-red-600 hidden sm:inline"
-        >
-          تسجيل الخروج
-        </button>
+        {user && (
+          <button
+            onClick={handleLogout}
+            className="text-sm hover:text-red-600 hidden sm:inline"
+          >
+            تسجيل الخروج
+          </button>
+        )}
 
         {/* أيقونة الملف الشخصي - دائمًا تظهر */}
         <Link to="/profile" title="الملف الشخصي">
