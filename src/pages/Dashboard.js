@@ -2,13 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 function Dashboard() {
-  // ⚠️ بيانات وهمية مؤقتة (سيتم ربطها بالـ backend لاحقًا)
-
+  // بيانات وهمية مؤقتة
   const stats = [
     { title: "عدد المهام", value: 25, color: "blue" },
     { title: "المهام المكتملة", value: 12, color: "green" },
     { title: "المهام المتأخرة", value: 4, color: "red" },
-    { title: "عدد المجموعات", value: 3, color: "purple" },
   ];
 
   const recentTasks = [
@@ -17,24 +15,31 @@ function Dashboard() {
     { id: 3, title: "تحسين واجهة لوحة التحكم", status: "مكتملة" },
   ];
 
+  const userGroups = [
+    { id: 1, name: "فريق التصميم" },
+    { id: 2, name: "فريق البرمجة" },
+    { id: 3, name: "فريق التسويق" },
+  ];
+
   return (
     <div className="text-right">
-      {/* 🟦 1. رسالة ترحيب */}
+      {/* رسالة ترحيب */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-          الرئيسية
+          لوحة التحكم
         </h2>
         <p className="text-gray-600 dark:text-gray-300">
-          يسعدنا وجودك! إليك نظرة سريعة على حالة المهام الحالية.
+          مرحبًا بك 👋 هذا ملخص سريع حول مهامك ومجموعاتك.
         </p>
       </div>
 
-      {/* 🟦 2. ملخص سريع */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* ملخص المهام */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
         {stats.map((item, index) => (
-          <div
+          <Link
             key={index}
-            className="bg-white dark:bg-gray-800 p-6 rounded shadow-md text-center border"
+            to="/tasks"
+            className={`block bg-white dark:bg-gray-800 p-6 rounded shadow-md border hover:shadow-lg transition transform hover:scale-[1.02]`}
           >
             <h3
               className={`text-lg font-semibold mb-2 text-${item.color}-600 dark:text-${item.color}-400`}
@@ -44,21 +49,20 @@ function Dashboard() {
             <p className="text-3xl font-bold text-gray-800 dark:text-white">
               {item.value}
             </p>
-          </div>
+          </Link>
         ))}
       </div>
 
-      {/* 🟦 3. آخر المهام */}
-      <div>
+      {/* آخر المهام */}
+      <div className="mb-10">
         <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
           آخر المهام المضافة
         </h3>
-
         <ul className="space-y-4">
           {recentTasks.map((task) => (
             <li
               key={task.id}
-              className="bg-white dark:bg-gray-800 p-4 rounded shadow border flex justify-between items-center"
+              className="bg-white dark:bg-gray-800 p-4 rounded shadow border flex justify-between items-center hover:shadow-md transition"
             >
               <span className="text-gray-800 dark:text-white">
                 {task.title}
@@ -70,14 +74,25 @@ function Dashboard() {
           ))}
         </ul>
       </div>
-      {/* زر الإضافة */}
-      <div className="mt-6 text-center">
-        <Link
-          to="/tasks"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
-          الانتقال إلى المهام
-        </Link>
+
+      {/* مجموعات المستخدم */}
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+          المجموعات التي تنتمي إليها
+        </h3>
+        <ul className="space-y-4">
+          {userGroups.map((group) => (
+            <Link
+              key={group.id}
+              to={`/groups/${group.id}`}
+              className="block bg-white dark:bg-gray-800 p-4 rounded shadow border hover:shadow-md transition"
+            >
+              <span className="text-gray-800 dark:text-white font-medium">
+                {group.name}
+              </span>
+            </Link>
+          ))}
+        </ul>
       </div>
     </div>
   );
