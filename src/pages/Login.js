@@ -38,7 +38,7 @@ function Login() {
 
     // ✅ تسجيل الدخول الوهمي
     const fakeUser = {
-      name: "ضياء التويل",
+      name: "ضياء الطويل",
       email: formData.email,
     };
 
