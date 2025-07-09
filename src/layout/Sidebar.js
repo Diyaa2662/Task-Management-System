@@ -9,7 +9,6 @@ function Sidebar({ isOpen, onToggleTheme, darkMode }) {
     { path: "/dashboard", label: "لوحة التحكم" },
     { path: "/tasks", label: "المهام" },
     { path: "/groups", label: "المجموعات" },
-    { path: "/categories", label: "الفئات" },
     { path: "/profile", label: "الملف الشخصي" },
   ];
 

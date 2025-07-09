@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 function Dashboard() {
   // ⚠️ بيانات وهمية مؤقتة (سيتم ربطها بالـ backend لاحقًا)
-  const userName = "ضياء";
 
   const stats = [
     { title: "عدد المهام", value: 25, color: "blue" },
@@ -22,8 +21,8 @@ function Dashboard() {
     <div className="text-right">
       {/* 🟦 1. رسالة ترحيب */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-          مرحبًا، {userName} 👋
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          الرئيسية
         </h2>
         <p className="text-gray-600 dark:text-gray-300">
           يسعدنا وجودك! إليك نظرة سريعة على حالة المهام الحالية.

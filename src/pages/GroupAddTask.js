@@ -5,9 +5,13 @@ function GroupAddTask() {
   const navigate = useNavigate();
   const { id } = useParams(); // ID المجموعة
 
+  // ✅ بيانات وهمية للفئات التنظيمية ضمن المجموعة
+  const categories = ["UI/UX", "برمجة", "اختبار", "وثائق"];
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    category: "", // ✅ حقل الفئة
     status: "قيد التنفيذ",
     priority: "متوسطة",
     dueDate: "",
@@ -57,6 +61,26 @@ function GroupAddTask() {
               rows={3}
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
             ></textarea>
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
+              الفئة
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+              required
+            >
+              <option value="">اختر فئة</option>
+              {categories.map((cat, i) => (
+                <option key={i} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
