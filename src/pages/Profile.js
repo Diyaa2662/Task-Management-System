@@ -70,9 +70,6 @@ function Profile() {
         <p>
           <strong>البريد:</strong> {user.email}
         </p>
-        <p>
-          <strong>الدور:</strong> {user.role}
-        </p>
       </div>
 
       {/* الإحصائيات (اختياري، وهمية مؤقتًا) */}

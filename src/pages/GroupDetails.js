@@ -79,9 +79,30 @@ function GroupDetails() {
 
   return (
     <div className="max-w-4xl mx-auto text-right bg-white dark:bg-gray-800 p-6 rounded shadow mt-6">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-        تفاصيل المجموعة: {group.name}
-      </h2>
+      {/* ✅ العنوان وزر العودة */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          تفاصيل المجموعة: {group.name}
+        </h2>
+        <Link
+          to="/groups"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          title="العودة إلى المجموعات"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M12.293 15.707a1 1 0 010-1.414L15.586 11H4a1 1 0 110-2h11.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </Link>
+      </div>
 
       {/* ✅ الأعضاء */}
       <div className="mb-8">
@@ -156,6 +177,18 @@ function GroupDetails() {
             </li>
           ))}
         </ul>
+
+        {/* ✅ زر إضافة عضو */}
+        {can(currentUserRole, "manageMembers") && (
+          <div className="mt-4">
+            <Link
+              to={`/groups/${group.id}/add-member`}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition inline-block"
+            >
+              + إضافة عضو
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* ✅ الفئات */}
@@ -255,14 +288,6 @@ function GroupDetails() {
             + إضافة مهمة
           </Link>
         )}
-        {can(currentUserRole, "manageMembers") && (
-          <Link
-            to={`/groups/${group.id}/add-member`}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-          >
-            + إضافة عضو
-          </Link>
-        )}
         {can(currentUserRole, "editGroup") && (
           <Link
             to={`/groups/${group.id}/edit`}
@@ -283,12 +308,6 @@ function GroupDetails() {
             حذف المجموعة
           </button>
         )}
-        <Link
-          to="/groups"
-          className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition"
-        >
-          العودة إلى المجموعات
-        </Link>
       </div>
     </div>
   );

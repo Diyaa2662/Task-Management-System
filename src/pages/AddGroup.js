@@ -3,11 +3,20 @@ import { useNavigate } from "react-router-dom";
 
 function AddGroup() {
   const navigate = useNavigate();
-  const [groupName, setGroupName] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("تم إنشاء مجموعة:", groupName);
+    console.log("📌 تم إنشاء مجموعة:", formData);
+    // مستقبلاً: إرسال البيانات إلى الـ API
     navigate("/groups");
   };
 
@@ -19,20 +28,38 @@ function AddGroup() {
         </h2>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
+          {/* 🔹 اسم المجموعة */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               اسم المجموعة
             </label>
             <input
               type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
               required
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
               placeholder="مثال: فريق التصميم"
             />
           </div>
 
+          {/* 🔹 وصف المجموعة */}
+          <div>
+            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
+              وصف المجموعة
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+              placeholder="مثال: هذه المجموعة مسؤولة عن تصميم واجهات المستخدم"
+            ></textarea>
+          </div>
+
+          {/* 🔘 الأزرار */}
           <div className="flex justify-between gap-4 mt-4">
             <button
               type="submit"

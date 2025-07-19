@@ -45,7 +45,6 @@ function Register() {
       id: Date.now(),
       name: formData.name,
       email: formData.email,
-      role: "owner",
     };
 
     login(user);
