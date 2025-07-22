@@ -18,6 +18,7 @@ import MemberDetails from "./pages/MemberDetails";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import GroupAddTask from "./pages/GroupAddTask";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
           />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
       </Routes>
     </Router>
