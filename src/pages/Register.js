@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../utils/auth"; // ✅ استيراد login
+import axios from "../api/axios";
 
 function Register() {
   const navigate = useNavigate();
@@ -28,27 +29,42 @@ function Register() {
     confirmPassword: "",
   });
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
-    // ✅ التحقق البسيط لاحقًا ممكن إضافة تحقق أعمق
-    if (formData.password !== formData.confirmPassword) {
-      alert("كلمتا المرور غير متطابقتين");
+    if (formData.password.length < 8) {
+      alert("كلمة المرور يجب أن تكون 8 محارف على الأقل.");
       return;
     }
 
-    const user = {
-      id: Date.now(),
-      name: formData.name,
-      email: formData.email,
-    };
+    if (formData.password !== formData.confirmPassword) {
+      alert("كلمتا المرور غير متطابقتين.");
+      return;
+    }
 
-    login(user);
-    navigate("/dashboard");
+    try {
+      const response = await axios.post("/auth/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      console.log("تم التسجيل بنجاح:", response.data);
+
+      localStorage.setItem("token", response.data.token);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("فشل التسجيل:", error.response?.data || error.message);
+      alert("فشل التسجيل: تأكد من صحة البيانات أو أن الإيميل غير مستخدم.");
+    }
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../utils/auth"; // ✅ استيراد الدالة
+import axios from "../api/axios"; // استخدام نسخة axios الخاصة بك
+import { login } from "../utils/auth"; // تخزين بيانات المستخدم
 
 function Login() {
   const navigate = useNavigate();
@@ -15,6 +16,8 @@ function Login() {
     password: "",
   });
 
+  const [error, setError] = useState("");
+
   const toggleTheme = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
@@ -22,6 +25,7 @@ function Login() {
   };
 
   useEffect(() => {
+    setFormData({ email: "", password: "" }); // تصفير الحقول عند كل فتح
     const html = document.documentElement;
     darkMode ? html.classList.add("dark") : html.classList.remove("dark");
   }, [darkMode]);
@@ -33,17 +37,27 @@ function Login() {
     }));
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
-    // ✅ تسجيل الدخول الوهمي
-    const fakeUser = {
-      name: "ضياء الطويل",
-      email: formData.email,
-    };
+    try {
+      const response = await axios.post("/auth/login", formData);
 
-    login(fakeUser);
-    navigate("/dashboard");
+      const { token, user } = response.data;
+
+      // حفظ التوكن وبيانات المستخدم
+      localStorage.setItem("token", token);
+      login(user);
+
+      // تحديث التوكن في axios تلقائيًا
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("❌ فشل تسجيل الدخول:", err);
+      setError("فشل تسجيل الدخول. تحقق من البريد وكلمة المرور.");
+    }
   };
 
   return (
@@ -57,6 +71,10 @@ function Login() {
 
       <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-3xl font-bold mb-6 text-center">تسجيل الدخول</h2>
+
+        {error && (
+          <p className="text-red-500 text-center mb-4 text-sm">{error}</p>
+        )}
 
         <form className="space-y-4" onSubmit={handleLogin}>
           <div>
