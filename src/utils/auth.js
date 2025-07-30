@@ -1,6 +1,7 @@
-// تخزين بيانات المستخدم عند تسجيل الدخول أو التسجيل
-export const login = (user) => {
+// تخزين بيانات المستخدم والتوكن عند تسجيل الدخول
+export const login = (user, token) => {
   localStorage.setItem("user", JSON.stringify(user));
+  localStorage.setItem("token", token);
 };
 
 // تسجيل الخروج
@@ -23,4 +24,9 @@ export const isLoggedIn = () => {
 // تحديث بيانات المستخدم المخزنة (مثلاً بعد التعديل على الملف الشخصي)
 export const updateUser = (newData) => {
   localStorage.setItem("user", JSON.stringify(newData));
+};
+
+// جلب التوكن المخزّن
+export const getToken = () => {
+  return localStorage.getItem("token");
 };

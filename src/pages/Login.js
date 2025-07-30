@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "../api/axios"; // استخدام نسخة axios الخاصة بك
-import { login } from "../utils/auth"; // تخزين بيانات المستخدم
+import axios from "../api/axios";
+import { login } from "../utils/auth";
 
 function Login() {
   const navigate = useNavigate();
@@ -43,14 +43,11 @@ function Login() {
 
     try {
       const response = await axios.post("/auth/login", formData);
+      const token = response.data.authorisation.token;
+      const user = response.data.user;
 
-      const { token, user } = response.data;
-
-      // حفظ التوكن وبيانات المستخدم
-      localStorage.setItem("token", token);
-      login(user);
-
-      // تحديث التوكن في axios تلقائيًا
+      // حفظ بيانات المستخدم والتوكن
+      login(user, token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       navigate("/dashboard");

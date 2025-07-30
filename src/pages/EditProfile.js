@@ -31,7 +31,7 @@ function EditProfile() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    localStorage.setItem("currentUser", JSON.stringify(formData));
+    localStorage.setItem("user", JSON.stringify(formData));
     navigate("/profile");
   };
 

@@ -52,13 +52,13 @@ function Register() {
         password: formData.password,
       });
 
-      console.log("تم التسجيل بنجاح:", response.data);
+      console.log("✅ تم التسجيل بنجاح:", response.data);
 
-      localStorage.setItem("token", response.data.token);
-      navigate("/dashboard");
+      alert("🎉 تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول.");
+      navigate("/login");
     } catch (error) {
-      console.error("فشل التسجيل:", error.response?.data || error.message);
-      alert("فشل التسجيل: تأكد من صحة البيانات أو أن الإيميل غير مستخدم.");
+      console.error("❌ فشل التسجيل:", error.response?.data || error.message);
+      alert("فشل التسجيل: تأكد من صحة البيانات أو أن الإيميل مستخدم.");
     }
   };
 
