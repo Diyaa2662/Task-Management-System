@@ -30,6 +30,26 @@ function Tasks() {
     fetchTasks();
   }, []);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("هل أنت متأكد من حذف المهمة؟")) return;
+
+    try {
+      const token = getToken();
+
+      // eslint-disable-next-line no-unused-vars
+      const response = await axios.get(`/tasks/${id}/delete`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // حذف المهمة من الواجهة مباشرة
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+    } catch (err) {
+      console.error("❌ فشل الحذف:", err);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
@@ -80,7 +100,7 @@ function Tasks() {
                 <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                   {task.title}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2 hidden md:block">
                   {task.description || "بدون وصف"}
                 </p>
               </div>
@@ -92,45 +112,31 @@ function Tasks() {
                   {task.priority === 0
                     ? "منخفضة"
                     : task.priority === 1
+                    ? "عادية"
+                    : task.priority === 2
                     ? "متوسطة"
                     : "مرتفعة"}
                 </span>
 
                 {/* الحالة */}
                 <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white">
-                  {task.status}
+                  {task.status === 0
+                    ? "قيد الانتظار"
+                    : task.status === 1
+                    ? "قيد التنفيذ"
+                    : task.status === 2
+                    ? "مكتملة"
+                    : task.status === 3
+                    ? "عالقة"
+                    : "ملغاة"}
                 </span>
 
                 {/* زر الحذف */}
                 <button
-                  className="text-sm text-red-600 hover:underline mt-2 self-start"
-                  onClick={async (e) => {
-                    e.preventDefault(); // منع الانتقال عند الضغط على الزر
-
-                    const confirmDelete = window.confirm(
-                      "هل أنت متأكد من حذف المهمة؟"
-                    );
-                    if (!confirmDelete) return;
-
-                    try {
-                      const response = await fetch(
-                        `https://task-management-api.alwakkaa.com/tasks/${task.id}/delete`,
-                        {
-                          method: "DELETE",
-                        }
-                      );
-
-                      if (!response.ok) {
-                        throw new Error("فشل في حذف المهمة");
-                      }
-
-                      // ✅ حذف المهمة من الواجهة
-                      setTasks((prev) => prev.filter((t) => t.id !== task.id));
-                      console.log("🗑️ تم حذف المهمة:", task.id);
-                    } catch (error) {
-                      console.error("❌ فشل الحذف:", error);
-                      alert("حدث خطأ أثناء محاولة الحذف");
-                    }
+                  className="text-xs font-medium px-2 py-1 rounded-full border border-red-500 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900 dark:text-red-300 dark:border-red-400 dark:hover:bg-red-800 mt-2 self-start"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelete(task.id);
                   }}
                 >
                   حذف
