@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "../api/axios";
+import { getToken } from "../utils/auth";
 
 function AddTask() {
   const navigate = useNavigate();
@@ -7,21 +9,77 @@ function AddTask() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    status: "قيد التنفيذ",
-    priority: "متوسطة",
-    category: "",
-    assignee: "",
+    status: 0,
+    priority: 1,
     dueDate: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "status" || name === "priority" ? Number(value) : value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("تم إرسال المهمة:", formData);
-    navigate("/tasks");
+    setLoading(true);
+
+    try {
+      const token = getToken();
+
+      // 1. تجهيز البيانات الأساسية (بدون الحالة والأولوية)
+      const data = new FormData();
+      data.append("title", formData.title);
+      data.append("description", formData.description);
+      data.append("due_date", formData.dueDate);
+
+      // 2. إرسال الطلب الأول: إنشاء المهمة
+      const response = await axios.post("/tasks/create", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("استجابة الإنشاء الكاملة:", response.data);
+
+      const taskId = response.data.data.id;
+
+      // 3. إرسال الحالة
+      await axios.post(
+        `/tasks/${taskId}/change-status`,
+        { status: Number(formData.status) },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // 4. إرسال الأولوية
+      await axios.post(
+        `/tasks/${taskId}/change-priority`,
+        { priority: Number(formData.priority) },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("✅ تمت إضافة المهمة وكل القيم");
+      navigate("/tasks");
+    } catch (err) {
+      console.error("❌ فشل إضافة المهمة:", err);
+      alert("حدث خطأ أثناء إضافة المهمة. تأكد من البيانات وحاول مرة أخرى.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,9 +128,11 @@ function AddTask() {
                 onChange={handleChange}
                 className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
               >
-                <option>قيد التنفيذ</option>
-                <option>مكتملة</option>
-                <option>مؤجلة</option>
+                <option value={0}>قيد الانتظار</option>
+                <option value={1}>قيد التنفيذ</option>
+                <option value={2}>مكتملة</option>
+                <option value={3}>عالقة</option>
+                <option value={4}>ملغاة</option>
               </select>
             </div>
 
@@ -86,36 +146,11 @@ function AddTask() {
                 onChange={handleChange}
                 className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
               >
-                <option>مرتفعة</option>
-                <option>متوسطة</option>
-                <option>منخفضة</option>
+                <option value={0}>منخفضة</option>
+                <option value={1}>عادية</option>
+                <option value={2}>متوسطة</option>
+                <option value={3}>مرتفعة</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
-                الفئة / المجموعة
-              </label>
-              <input
-                type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
-                المسؤول
-              </label>
-              <input
-                type="text"
-                name="assignee"
-                value={formData.assignee}
-                onChange={handleChange}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              />
             </div>
 
             <div>
@@ -135,9 +170,10 @@ function AddTask() {
           <div className="flex justify-between gap-4 mt-6">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
             >
-              حفظ المهمة
+              {loading ? "جارٍ الحفظ..." : "حفظ المهمة"}
             </button>
 
             <button
