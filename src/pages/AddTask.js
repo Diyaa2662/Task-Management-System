@@ -46,8 +46,6 @@ function AddTask() {
         },
       });
 
-      console.log("استجابة الإنشاء الكاملة:", response.data);
-
       const taskId = response.data.data.id;
 
       // 3. إرسال الحالة
@@ -72,7 +70,6 @@ function AddTask() {
         }
       );
 
-      console.log("✅ تمت إضافة المهمة وكل القيم");
       navigate("/tasks");
     } catch (err) {
       console.error("❌ فشل إضافة المهمة:", err);

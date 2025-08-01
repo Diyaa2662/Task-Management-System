@@ -7,6 +7,7 @@ function Tasks() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -50,30 +51,43 @@ function Tasks() {
     }
   };
 
+  const handleFilterChange = (e) => {
+    setFilterStatus(e.target.value);
+  };
+
+  const filteredTasks =
+    filterStatus === "all"
+      ? tasks
+      : tasks.filter((task) => String(task.status) === filterStatus);
+
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
           قائمة المهام
         </h2>
-        <Link
-          to="/tasks/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-        >
-          + إضافة مهمة
-        </Link>
-      </div>
 
-      {/* الفلاتر (مستقبلًا ممكن ربطها بالـ API) */}
-      <div className="mb-4 flex flex-wrap gap-4">
-        <select className="p-2 rounded border dark:bg-gray-700 dark:text-white">
-          <option>كل الحالات</option>
-          <option>قيد الانتظار</option>
-          <option>قيد التنفيذ</option>
-          <option>مكتملة</option>
-          <option>عالقة</option>
-          <option>ملغاة</option>
-        </select>
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <select
+            value={filterStatus}
+            onChange={handleFilterChange}
+            className="p-2 rounded border dark:bg-gray-700 dark:text-white"
+          >
+            <option value="all">كل الحالات</option>
+            <option value="0">قيد الانتظار</option>
+            <option value="1">قيد التنفيذ</option>
+            <option value="2">مكتملة</option>
+            <option value="3">عالقة</option>
+            <option value="4">ملغاة</option>
+          </select>
+
+          <Link
+            to="/tasks/new"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+          >
+            + إضافة مهمة
+          </Link>
+        </div>
       </div>
 
       {/* تحميل أو خطأ */}
@@ -89,37 +103,39 @@ function Tasks() {
             لا توجد مهام حالياً.
           </p>
         ) : (
-          tasks.map((task) => (
-            <Link
-              to={`/tasks/${task.id}`}
+          filteredTasks.map((task) => (
+            <div
               key={task.id}
-              className="p-4 bg-white dark:bg-gray-800 shadow rounded border flex justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer"
+              className="grid grid-cols-12 items-stretch gap-4 p-4 bg-white dark:bg-gray-800 shadow rounded border hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
-              {/* ✅ القسم الأيمن: العنوان والوصف */}
-              <div className="flex-1 pr-4 text-right">
-                <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {/* ✅ العنوان والوصف (50%) */}
+              <div className="col-span-12 md:col-span-6 text-right">
+                <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400">
                   {task.title}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2 hidden md:block">
-                  {task.description || "بدون وصف"}
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 hidden md:block">
+                  {(task.description?.length || 0) <= 50
+                    ? task.description || "بدون وصف"
+                    : `${task.description.slice(0, 50)}...`}
                 </p>
               </div>
 
-              {/* ✅ القسم الأيسر: الأولوية + الحالة + الحذف */}
-              <div className="flex flex-col items-start gap-2 min-w-[100px]">
-                {/* الأولوية */}
-                <span className="text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100">
-                  {task.priority === 0
-                    ? "منخفضة"
-                    : task.priority === 1
-                    ? "عادية"
-                    : task.priority === 2
-                    ? "متوسطة"
-                    : "مرتفعة"}
-                </span>
-
-                {/* الحالة */}
-                <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white">
+              {/* ✅ الحالة */}
+              <div className="col-span-6 md:col-span-2 flex items-center md:justify-center text-sm">
+                <div
+                  className={`w-full h-full px-3 py-2 rounded-md flex items-center justify-center
+      ${
+        task.status === 0
+          ? "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-white" // قيد الانتظار
+          : task.status === 1
+          ? "bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100" // قيد التنفيذ
+          : task.status === 2
+          ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100" // مكتملة
+          : task.status === 3
+          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100" // عالقة
+          : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100" // ملغاة
+      }`}
+                >
                   {task.status === 0
                     ? "قيد الانتظار"
                     : task.status === 1
@@ -129,11 +145,44 @@ function Tasks() {
                     : task.status === 3
                     ? "عالقة"
                     : "ملغاة"}
-                </span>
+                </div>
+              </div>
 
-                {/* زر الحذف */}
+              {/* ✅ الأولوية */}
+              <div className="col-span-6 md:col-span-2 flex items-center md:justify-center text-sm">
+                <div
+                  className={`w-full h-full px-3 py-2 rounded-md flex items-center justify-center
+      ${
+        task.priority === 0
+          ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100"
+          : task.priority === 1
+          ? "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-white"
+          : task.priority === 2
+          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100"
+          : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100"
+      }`}
+                >
+                  {task.priority === 0
+                    ? "منخفضة"
+                    : task.priority === 1
+                    ? "عادية"
+                    : task.priority === 2
+                    ? "متوسطة"
+                    : "مرتفعة"}
+                </div>
+              </div>
+
+              {/* ✅ أزرار التفاصيل والحذف */}
+              <div className="col-span-12 md:col-span-2 flex flex-col gap-2 items-end md:items-center">
+                <Link
+                  to={`/tasks/${task.id}`}
+                  className="text-xs font-medium px-3 py-1 rounded-full border border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800 transition"
+                >
+                  عرض التفاصيل
+                </Link>
+
                 <button
-                  className="text-xs font-medium px-2 py-1 rounded-full border border-red-500 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900 dark:text-red-300 dark:border-red-400 dark:hover:bg-red-800 mt-2 self-start"
+                  className="text-xs font-medium px-3 py-1 rounded-full border border-red-500 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900 dark:text-red-300 dark:border-red-400 dark:hover:bg-red-800 transition"
                   onClick={(e) => {
                     e.preventDefault();
                     handleDelete(task.id);
@@ -142,7 +191,7 @@ function Tasks() {
                   حذف
                 </button>
               </div>
-            </Link>
+            </div>
           ))
         )}
       </div>
