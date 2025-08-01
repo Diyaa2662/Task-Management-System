@@ -1,33 +1,132 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "../api/axios";
+import { getToken } from "../utils/auth";
 
 function EditTask() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // ⚠️ مهمة وهمية مؤقتة
-  const taskFromServer = {
-    id,
-    title: "إنهاء صفحة تسجيل الدخول",
-    description: "إنشاء الواجهة وتنسيقها وربطها مع قاعدة البيانات لاحقًا.",
-    status: "قيد التنفيذ",
-    priority: "مرتفعة",
-    category: "Frontend",
-    assignee: "أحمد",
-    dueDate: "2025-06-10",
-  };
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    status: 0,
+    priority: 0,
+    due_date: "",
+  });
 
-  const [formData, setFormData] = useState(taskFromServer);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // ✅ جلب بيانات المهمة
+  useEffect(() => {
+    const fetchTask = async () => {
+      try {
+        const response = await axios.get(`/tasks/${id}`, {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        });
+
+        const task = response.data.data;
+
+        setFormData({
+          title: task.title || "",
+          description: task.description || "",
+          status: task.status,
+          priority: task.priority,
+          due_date: task.due_date || "",
+        });
+      } catch (err) {
+        console.error("❌ فشل جلب المهمة:", err);
+        setError("حدث خطأ أثناء جلب بيانات المهمة.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTask();
+  }, [id]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === "status" || name === "priority" ? parseInt(value) : value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("تم تعديل المهمة:", formData);
-    navigate(`/tasks/${id}`);
+
+    try {
+      const token = getToken();
+
+      // 1. تعديل العنوان والوصف وتاريخ الاستحقاق
+      await axios.post(
+        `/tasks/${id}/edit`,
+        {
+          title: formData.title,
+          description: formData.description,
+          due_date: formData.due_date,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // 2. تعديل الحالة
+      await axios.post(
+        `/tasks/${id}/change-status`,
+        {
+          status: formData.status,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // 3. تعديل الأولوية
+      await axios.post(
+        `/tasks/${id}/change-priority`,
+        {
+          priority: formData.priority,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      navigate(`/tasks/${id}`);
+    } catch (err) {
+      console.error("❌ فشل التعديل:", err);
+      alert("حدث خطأ أثناء تعديل المهمة.");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="text-center text-gray-600 dark:text-gray-300 mt-6">
+        جاري تحميل بيانات المهمة...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 dark:text-red-400 mt-6">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center text-right">
@@ -75,9 +174,11 @@ function EditTask() {
                 onChange={handleChange}
                 className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
               >
-                <option>قيد التنفيذ</option>
-                <option>مكتملة</option>
-                <option>مؤجلة</option>
+                <option value={0}>قيد الانتظار</option>
+                <option value={1}>قيد التنفيذ</option>
+                <option value={2}>مكتملة</option>
+                <option value={3}>عالقة</option>
+                <option value={4}>ملغاة</option>
               </select>
             </div>
 
@@ -91,36 +192,11 @@ function EditTask() {
                 onChange={handleChange}
                 className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
               >
-                <option>مرتفعة</option>
-                <option>متوسطة</option>
-                <option>منخفضة</option>
+                <option value={0}>منخفضة</option>
+                <option value={1}>عادية</option>
+                <option value={2}>متوسطة</option>
+                <option value={3}>مرتفعة</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
-                الفئة / المجموعة
-              </label>
-              <input
-                type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
-                المسؤول
-              </label>
-              <input
-                type="text"
-                name="assignee"
-                value={formData.assignee}
-                onChange={handleChange}
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              />
             </div>
 
             <div>
@@ -129,8 +205,8 @@ function EditTask() {
               </label>
               <input
                 type="date"
-                name="dueDate"
-                value={formData.dueDate}
+                name="due_date"
+                value={formData.due_date}
                 onChange={handleChange}
                 className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
               />
