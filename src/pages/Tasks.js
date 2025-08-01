@@ -126,14 +126,14 @@ function Tasks() {
                   className={`w-full h-full px-3 py-2 rounded-md flex items-center justify-center
       ${
         task.status === 0
-          ? "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-white" // قيد الانتظار
+          ? "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-100" // قيد الانتظار
           : task.status === 1
-          ? "bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100" // قيد التنفيذ
+          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-yellow-100" // قيد التنفيذ
           : task.status === 2
           ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100" // مكتملة
-          : task.status === 3
-          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100" // عالقة
-          : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100" // ملغاة
+          : task.status === 4
+          ? "bg-gray-800 text-white dark:bg-black dark:text-white" // ملغاة
+          : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100" // عالقة
       }`}
                 >
                   {task.status === 0
@@ -154,9 +154,9 @@ function Tasks() {
                   className={`w-full h-full px-3 py-2 rounded-md flex items-center justify-center
       ${
         task.priority === 0
-          ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100"
-          : task.priority === 1
           ? "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-white"
+          : task.priority === 1
+          ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100"
           : task.priority === 2
           ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100"
           : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100"
