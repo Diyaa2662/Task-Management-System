@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "../api/axios";
+import { getToken } from "../utils/auth";
 
 function AddGroup() {
   const navigate = useNavigate();
@@ -8,16 +10,49 @@ function AddGroup() {
     name: "",
     description: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("📌 تم إنشاء مجموعة:", formData);
-    // مستقبلاً: إرسال البيانات إلى الـ API
-    navigate("/groups");
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await axios.post(
+        "/groups/create",
+        {
+          name: formData.name,
+          description: formData.description,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("✅ تم إنشاء المجموعة:", res.data);
+
+      // بعد الحفظ، نعيد المستخدم لصفحة المجموعات
+      navigate("/groups");
+    } catch (err) {
+      console.error(
+        "❌ فشل إنشاء المجموعة:",
+        err.response?.data || err.message
+      );
+      setError(
+        err.response?.data?.message ||
+          "حدث خطأ أثناء إنشاء المجموعة، حاول مجددًا."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,8 +62,9 @@ function AddGroup() {
           إضافة مجموعة جديدة
         </h2>
 
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
         <form onSubmit={handleSubmit} className="grid gap-4">
-          {/* 🔹 اسم المجموعة */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               اسم المجموعة
@@ -44,7 +80,6 @@ function AddGroup() {
             />
           </div>
 
-          {/* 🔹 وصف المجموعة */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               وصف المجموعة
@@ -59,13 +94,13 @@ function AddGroup() {
             ></textarea>
           </div>
 
-          {/* 🔘 الأزرار */}
           <div className="flex justify-between gap-4 mt-4">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
             >
-              حفظ المجموعة
+              {loading ? "جارٍ الحفظ..." : "حفظ المجموعة"}
             </button>
 
             <button

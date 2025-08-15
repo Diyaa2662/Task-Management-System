@@ -84,7 +84,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
         </button>
 
         {user && (
-          <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
+          <span className="hidden sm:inline bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium text-gray-800 dark:text-white">
             {user.name}
           </span>
         )}
@@ -92,7 +92,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
         {user && (
           <button
             onClick={handleLogout}
-            className="text-sm hover:text-red-600 hidden sm:inline"
+            className="hidden sm:inline bg-red-300 dark:bg-red-600 text-white px-3 py-1 rounded-full shadow-sm hover:bg-red-700 transition text-sm"
           >
             تسجيل الخروج
           </button>
