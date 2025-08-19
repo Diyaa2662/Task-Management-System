@@ -1,24 +1,58 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "../api/axios";
+import { getToken } from "../utils/auth";
 
 function AddMember() {
   const navigate = useNavigate();
   const { id } = useParams(); // ID المجموعة
 
+  // مبدئياً: 1=Admin, 2=Manager, 3=Assignee (تأكد من القيم من الباك)
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
-    role: "assignee", // القيمة الابتدائية: مكلف
+    role: "3", // مكلف
   });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setServerError("");
+    setFieldErrors({});
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(`تم إضافة العضو إلى المجموعة رقم ${id}:`, formData);
-    navigate(`/groups/${id}`);
+    setSubmitting(true);
+    setServerError("");
+    setFieldErrors({});
+
+    try {
+      const fd = new FormData();
+      fd.append("email", formData.email.trim());
+      fd.append("role", formData.role); // لازم رقم كسلسلة
+
+      await axios.post(`/groups/${id}/invite-member`, fd, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          Accept: "application/json",
+          // ما تحط Content-Type يدوياً، axios بيحط boundary لحاله
+        },
+      });
+
+      alert("✅ تم إرسال دعوة الانضمام بنجاح");
+      navigate(`/groups/${id}`);
+    } catch (err) {
+      const data = err.response?.data;
+      // أمثلة رسائل التحقق من Laravel
+      if (data?.errors) setFieldErrors(data.errors);
+      if (data?.message) setServerError(data.message);
+      console.error("فشل إضافة العضو:", data || err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -29,35 +63,25 @@ function AddMember() {
         </h2>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
-          {/* الاسم */}
-          <div>
-            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
-              اسم العضو
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-              placeholder="أدخل اسم العضو"
-            />
-          </div>
-
           {/* البريد */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
-              البريد الإلكتروني (اختياري)
+              البريد الإلكتروني
             </label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
+              required
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
               placeholder="email@example.com"
             />
+            {fieldErrors.email && (
+              <p className="text-xs text-red-600 mt-1">
+                {fieldErrors.email[0]}
+              </p>
+            )}
           </div>
 
           {/* الدور */}
@@ -71,20 +95,29 @@ function AddMember() {
               onChange={handleChange}
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
             >
-              <option value="owner">مالك المجموعة</option>
-              <option value="admin">مدير المجموعة</option>
-              <option value="manager">إداري المجموعة</option>
-              <option value="assignee">مكلف (عضو عادي)</option>
+              <option value="1">مدير المجموعة</option>
+              <option value="2">إداري المجموعة</option>
+              <option value="3">مكلف</option>
             </select>
+            {fieldErrors.role && (
+              <p className="text-xs text-red-600 mt-1">{fieldErrors.role[0]}</p>
+            )}
           </div>
+
+          {serverError && (
+            <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/30 p-2 rounded">
+              {serverError}
+            </div>
+          )}
 
           {/* الأزرار */}
           <div className="flex justify-between gap-4 mt-4">
             <button
               type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+              disabled={submitting}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition disabled:opacity-60"
             >
-              إضافة العضو
+              {submitting ? "جارٍ الإرسال..." : "إضافة العضو"}
             </button>
 
             <button

@@ -1,85 +1,98 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import axios from "../api/axios";
+import { getToken } from "../utils/auth";
+import { X } from "lucide-react";
 
 function GroupDetails() {
   const { id } = useParams();
-
-  const currentUserRole = "Owner";
-
-  const group = {
-    id,
-    name: "فريق التصميم",
-    members: [
-      { name: "أحمد", role: "Owner" },
-      { name: "سارة", role: "Admin" },
-      { name: "خالد", role: "Manager" },
-      { name: "مريم", role: "Assignee" },
-    ],
-    categories: ["تصميم واجهات", "تصميم شعارات"],
-    tasks: [
-      {
-        id: 1,
-        title: "تصميم صفحة تسجيل الدخول",
-        category: "تصميم واجهات",
-        status: "قيد التنفيذ",
-      },
-      {
-        id: 2,
-        title: "تصميم شعار جديد",
-        category: "تصميم شعارات",
-        status: "مكتملة",
-      },
-      {
-        id: 3,
-        title: "تحسين واجهة لوحة التحكم",
-        category: "تصميم واجهات",
-        status: "قيد التنفيذ",
-      },
-    ],
-  };
-
-  const [members, setMembers] = useState(group.members);
-  const [categories, setCategories] = useState(group.categories);
+  const [group, setGroup] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [newCategory, setNewCategory] = useState("");
-  const [editingIndex, setEditingIndex] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  const handleAddCategory = () => {
-    if (!newCategory.trim()) return;
-    setCategories([...categories, newCategory.trim()]);
-    setNewCategory("");
-  };
+  const currentUserRole = "Owner"; // مؤقتاً، حتى تجيبها من API المستخدم
 
-  const handleDeleteCategory = (index) => {
-    if (window.confirm("هل أنت متأكد من حذف هذه الفئة؟")) {
-      setCategories(categories.filter((_, i) => i !== index));
-      if (filterCategory === categories[index]) {
-        setFilterCategory("all");
-      }
+  // دالة جلب بيانات المجموعة
+  const fetchGroupDetails = async () => {
+    try {
+      const res = await axios.get(`/groups/${id}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+
+      const groupData = res.data.data; // <-- التعديل هنا
+
+      setGroup(groupData);
+      setMembers(groupData.members || []);
+      setCategories(groupData.categories || []);
+      setTasks(groupData.tasks || []);
+    } catch (err) {
+      console.error(
+        "فشل تحميل بيانات المجموعة:",
+        err.response?.data || err.message
+      );
+    } finally {
+      setLoading(false);
     }
   };
+
+  // إضافة فئة جديدة
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) return;
+    try {
+      await axios.post(`/groups/${id}/add-category`, {
+        title: newCategory.trim(),
+        color: "#000000", // مؤقتاً، ممكن تضيف اختيار لون لاحقاً
+      });
+      setCategories([
+        ...categories,
+        { title: newCategory.trim(), color: "#000000" },
+      ]); // <-- تعديل هنا
+      setNewCategory("");
+    } catch (err) {
+      console.error("فشل إضافة الفئة:", err);
+    }
+  };
+
+  // حذف عضو
+  const handleDeleteMember = async (memberId) => {
+    if (!window.confirm("هل أنت متأكد من حذف هذا العضو؟")) return;
+    try {
+      await axios.post(`/groups/${id}/remove-member`, { user_id: memberId });
+      setMembers(members.filter((m) => m.id !== memberId));
+    } catch (err) {
+      console.error("فشل حذف العضو:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroupDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  if (loading) {
+    return <p className="text-center text-gray-500 mt-6">جاري التحميل...</p>;
+  }
+
+  if (!group) {
+    return (
+      <p className="text-center mt-6 text-red-500">
+        لم يتم العثور على المجموعة.
+      </p>
+    );
+  }
 
   const filteredTasks =
     filterCategory === "all"
-      ? group.tasks
-      : group.tasks.filter((task) => task.category === filterCategory);
-
-  const handleDeleteMember = (index) => {
-    if (window.confirm("هل أنت متأكد من حذف هذا العضو؟")) {
-      setMembers(members.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleRoleChange = (index, newRole) => {
-    const updated = members.map((m, i) =>
-      i === index ? { ...m, role: newRole } : m
-    );
-    setMembers(updated);
-  };
+      ? tasks
+      : tasks.filter((task) => task.category === filterCategory);
 
   return (
     <div className="max-w-4xl mx-auto text-right bg-white dark:bg-gray-800 p-6 rounded shadow mt-6">
-      {/* ✅ العنوان وزر العودة */}
+      {/* العنوان وزر العودة */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
           تفاصيل المجموعة: {group.name}
@@ -89,60 +102,31 @@ function GroupDetails() {
           className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
           title="العودة إلى المجموعات"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M12.293 15.707a1 1 0 010-1.414L15.586 11H4a1 1 0 110-2h11.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
+          ←
         </Link>
       </div>
 
-      {/* ✅ الأعضاء */}
+      {/* الأعضاء */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           الأعضاء:
         </h3>
         <ul className="space-y-2">
-          {members.map((member, index) => (
+          {members.map((member) => (
             <li
-              key={index}
+              key={member.id}
               className="bg-gray-100 dark:bg-gray-700 p-3 rounded flex justify-between items-center"
             >
               <div>
-                <span className="font-semibold">{member.name}</span>{" "}
-                {editingIndex === index ? (
-                  member.role !== "Owner" ? (
-                    <select
-                      value={member.role}
-                      onChange={(e) => handleRoleChange(index, e.target.value)}
-                      className="ml-2 p-1 border rounded dark:bg-gray-600 dark:text-white"
-                    >
-                      <option value="Admin">مدير المجموعة</option>
-                      <option value="Manager">إداري المجموعة</option>
-                      <option value="Assignee">مكلف</option>
-                    </select>
-                  ) : (
-                    <span className="text-sm text-gray-500 dark:text-gray-300 ml-2">
-                      (مالك المجموعة)
-                    </span>
-                  )
-                ) : (
-                  <span className="text-sm text-gray-500 dark:text-gray-300">
-                    ({translateRole(member.role)})
-                  </span>
-                )}
+                <span className="font-semibold">{member.name}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-300 ml-2">
+                  ({translateRole(member.role)})
+                </span>
               </div>
 
               <div className="flex gap-3">
                 <Link
-                  to={`/groups/${group.id}/members/${index}`}
+                  to={`/groups/${group.id}/members/${member.id}`}
                   className="text-sm text-blue-600 hover:underline"
                 >
                   عرض
@@ -150,23 +134,16 @@ function GroupDetails() {
                 {can(currentUserRole, "manageMembers") &&
                   member.role !== "Owner" && (
                     <>
-                      {editingIndex === index ? (
-                        <button
-                          onClick={() => setEditingIndex(null)}
-                          className="text-sm text-green-600 hover:underline"
-                        >
-                          حفظ
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setEditingIndex(index)}
-                          className="text-sm text-indigo-400 hover:underline"
-                        >
-                          تغيير الدور
-                        </button>
-                      )}
                       <button
-                        onClick={() => handleDeleteMember(index)}
+                        onClick={() =>
+                          alert("تغيير الدور يحتاج endpoint جديد في الـ API")
+                        }
+                        className="text-sm text-indigo-400 hover:underline"
+                      >
+                        تغيير الدور
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMember(member.id)}
                         className="text-sm text-red-600 hover:underline"
                       >
                         حذف
@@ -178,7 +155,7 @@ function GroupDetails() {
           ))}
         </ul>
 
-        {/* ✅ زر إضافة عضو */}
+        {/* زر إضافة عضو */}
         {can(currentUserRole, "manageMembers") && (
           <div className="mt-4">
             <Link
@@ -191,30 +168,40 @@ function GroupDetails() {
         )}
       </div>
 
-      {/* ✅ الفئات */}
+      {/* الفئات */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           الفئات التنظيمية:
         </h3>
         <div className="flex flex-wrap gap-2 mb-4">
-          {categories.map((cat, idx) => (
+          {categories.map((cat) => (
             <div
-              key={idx}
-              className="flex items-center bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 rounded"
+              key={cat.id}
+              className="relative group flex items-center bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 rounded"
             >
-              <span>{cat}</span>
-              {can(currentUserRole, "manageTasks") && (
-                <button
-                  onClick={() => handleDeleteCategory(idx)}
-                  className="ml-2 text-red-600 hover:text-red-800"
-                  title="حذف الفئة"
-                >
-                  ×
-                </button>
-              )}
+              <span>{cat.title}</span>
+              {/* زر الحذف يظهر فقط عند الهوفر */}
+              <button
+                onClick={async () => {
+                  if (!window.confirm("هل أنت متأكد من حذف هذه الفئة؟")) return;
+                  try {
+                    await axios.get(`/categories/${cat.id}/delete`, {
+                      headers: { Authorization: `Bearer ${getToken()}` },
+                    });
+                    setCategories(categories.filter((c) => c.id !== cat.id));
+                  } catch (err) {
+                    console.error("فشل حذف الفئة:", err);
+                  }
+                }}
+                className="absolute -top-2 -left-2 hidden group-hover:flex bg-red-600 text-white rounded-full w-5 h-5 items-center justify-center hover:bg-red-700"
+                title="حذف الفئة"
+              >
+                <X size={12} />
+              </button>
             </div>
           ))}
         </div>
+
         {can(currentUserRole, "manageTasks") && (
           <div className="flex gap-2">
             <input
@@ -234,7 +221,7 @@ function GroupDetails() {
         )}
       </div>
 
-      {/* ✅ الفلتر */}
+      {/* الفلتر */}
       <div className="mb-6 flex flex-wrap gap-2 justify-end items-center">
         <label className="text-sm text-gray-700 dark:text-gray-300">
           فرز حسب الفئة:
@@ -246,14 +233,14 @@ function GroupDetails() {
         >
           <option value="all">كل المهام</option>
           {categories.map((cat, idx) => (
-            <option key={idx} value={cat}>
-              {cat}
+            <option key={idx} value={cat.title}>
+              {cat.title}
             </option>
           ))}
         </select>
       </div>
 
-      {/* ✅ المهام */}
+      {/* المهام */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           المهام:
@@ -278,7 +265,7 @@ function GroupDetails() {
         </ul>
       </div>
 
-      {/* ✅ الأزرار */}
+      {/* الأزرار */}
       <div className="flex flex-wrap gap-3 justify-between mt-6">
         {can(currentUserRole, "manageTasks") && (
           <Link
@@ -300,7 +287,10 @@ function GroupDetails() {
           <button
             onClick={() => {
               if (window.confirm("هل أنت متأكد من حذف هذه المجموعة؟")) {
-                alert("تم حذف المجموعة (لاحقًا يتم الربط مع قاعدة البيانات)");
+                axios
+                  .get(`/groups/${group.id}/delete`)
+                  .then(() => alert("تم حذف المجموعة"))
+                  .catch((err) => console.error("فشل حذف المجموعة:", err));
               }
             }}
             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
