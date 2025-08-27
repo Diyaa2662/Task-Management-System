@@ -37,14 +37,14 @@ function Notifications() {
     // يدعم رقم أو نص
     if (typeof r === "number") {
       switch (r) {
-        case 1:
-          return "مالك المجموعة";
-        case 2:
+        case 0:
           return "مدير المجموعة";
-        case 3:
-          return "إداري المجموعة";
-        case 4:
+        case 1:
           return "مكلّف";
+        case 2:
+          return "إداري المجموعة";
+        case 3:
+          return "قارئ";
         default:
           return `دور #${r}`;
       }
@@ -52,7 +52,6 @@ function Notifications() {
     // نصوص محتملة من الباك
     if (!r) return "دور غير محدد";
     const v = String(r).toLowerCase();
-    if (v.includes("owner")) return "مالك المجموعة";
     if (v.includes("admin")) return "مدير المجموعة";
     if (v.includes("manager")) return "إداري المجموعة";
     if (v.includes("assignee")) return "مكلّف";

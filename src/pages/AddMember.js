@@ -7,10 +7,9 @@ function AddMember() {
   const navigate = useNavigate();
   const { id } = useParams(); // ID المجموعة
 
-  // مبدئياً: 1=Admin, 2=Manager, 3=Assignee (تأكد من القيم من الباك)
   const [formData, setFormData] = useState({
     email: "",
-    role: "3", // مكلف
+    role: "1", // مكلف
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +37,6 @@ function AddMember() {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           Accept: "application/json",
-          // ما تحط Content-Type يدوياً، axios بيحط boundary لحاله
         },
       });
 
@@ -95,9 +93,9 @@ function AddMember() {
               onChange={handleChange}
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
             >
-              <option value="1">مدير المجموعة</option>
+              <option value="0">مدير المجموعة</option>
               <option value="2">إداري المجموعة</option>
-              <option value="3">مكلف</option>
+              <option value="1">مكلف</option>
             </select>
             {fieldErrors.role && (
               <p className="text-xs text-red-600 mt-1">{fieldErrors.role[0]}</p>

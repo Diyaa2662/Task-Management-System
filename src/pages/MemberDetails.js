@@ -1,19 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import axios from "../api/axios";
+import { getToken } from "../utils/auth";
 
 function MemberDetails() {
   const { id, memberId } = useParams();
+  const [member, setMember] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // بيانات وهمية مؤقتة
-  const member = {
-    id: memberId,
-    name: "أحمد محمد",
-    email: "ahmed@example.com",
-    tasks: [
-      { id: 1, title: "تصميم الصفحة الرئيسية", status: "قيد التنفيذ" },
-      { id: 2, title: "تحديث الشعار", status: "مكتملة" },
-    ],
+  const fetchMember = async () => {
+    try {
+      const res = await axios.get(`/groups/${id}/members`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const payload = res.data?.data ?? res.data ?? {};
+      const ownerData = payload.owner || null;
+      const memberList = Array.isArray(payload.members) ? payload.members : [];
+
+      // دمج المالك مع الأعضاء (حتى نقدر نعرضه بنفس الصفحة)
+      const allMembers = [
+        ...(ownerData ? [{ ...ownerData, isOwner: true }] : []),
+        ...memberList.map((m) => ({ ...m, isOwner: false })),
+      ];
+
+      const found = allMembers.find((m) => String(m.id) === String(memberId));
+      setMember(found || null);
+    } catch (err) {
+      console.error(
+        "فشل تحميل بيانات العضو:",
+        err.response?.data || err.message
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchMember();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, memberId]);
+
+  if (loading)
+    return <p className="text-center text-gray-500 mt-6">جاري التحميل...</p>;
+
+  if (!member)
+    return (
+      <p className="text-center mt-6 text-red-500">لم يتم العثور على العضو.</p>
+    );
 
   return (
     <div className="max-w-3xl mx-auto text-right bg-white dark:bg-gray-800 p-6 rounded shadow mt-6">
@@ -29,24 +62,12 @@ function MemberDetails() {
           <span className="font-semibold">البريد الإلكتروني:</span>{" "}
           {member.email}
         </p>
+        {member.isOwner && (
+          <p className="text-sm text-blue-600 dark:text-blue-400">
+            هذا العضو هو مالك المجموعة
+          </p>
+        )}
       </div>
-
-      <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
-        المهام:
-      </h3>
-      <ul className="space-y-2 mb-6">
-        {member.tasks.map((task) => (
-          <li
-            key={task.id}
-            className="bg-gray-100 dark:bg-gray-700 p-3 rounded flex justify-between items-center"
-          >
-            <span>{task.title}</span>
-            <span className="text-sm px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded">
-              {task.status}
-            </span>
-          </li>
-        ))}
-      </ul>
 
       <div className="text-center">
         <Link
