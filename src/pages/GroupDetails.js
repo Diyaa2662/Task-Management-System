@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken, getCurrentUser } from "../utils/auth";
-import { List, X } from "lucide-react";
+import { X } from "lucide-react";
 
 function GroupDetails() {
   const { id } = useParams();
