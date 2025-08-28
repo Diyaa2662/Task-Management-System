@@ -1,11 +1,54 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getCurrentUser, logout } from "../utils/auth";
 import { LogOut, Edit3, CheckSquare, List, Users } from "lucide-react";
+import axios from "../api/axios";
 
 function Profile() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+
+  const [stats, setStats] = useState({
+    totalTasks: 0,
+    completedTasks: 0,
+    totalGroups: 0,
+  });
+
+  useEffect(() => {
+    if (!user) return;
+
+    // جلب المهام
+    const fetchTasks = async () => {
+      try {
+        const response = await axios.get("/tasks");
+        if (response.data && response.data.data) {
+          const tasks = response.data.data;
+          const totalTasks = tasks.length;
+          const completedTasks = tasks.filter((t) => t.status === 2).length;
+          setStats((prev) => ({ ...prev, totalTasks, completedTasks }));
+        }
+      } catch (error) {
+        console.error("خطأ في جلب المهام:", error);
+      }
+    };
+
+    // جلب المجموعات التي أنشأها المستخدم
+    const fetchGroups = async () => {
+      try {
+        const response = await axios.get("/groups/owned-groups");
+        if (response.data && response.data.data) {
+          const groups = response.data.data;
+          const totalGroups = groups.length;
+          setStats((prev) => ({ ...prev, totalGroups }));
+        }
+      } catch (error) {
+        console.error("خطأ في جلب المجموعات:", error);
+      }
+    };
+
+    fetchTasks();
+    fetchGroups();
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -83,17 +126,23 @@ function Profile() {
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl shadow">
           <List className="w-6 h-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
           <p className="text-gray-600 dark:text-gray-300">المهام</p>
-          <p className="text-xl font-bold text-gray-800 dark:text-white">15</p>
+          <p className="text-xl font-bold text-gray-800 dark:text-white">
+            {stats.totalTasks}
+          </p>
         </div>
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl shadow">
           <CheckSquare className="w-6 h-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
           <p className="text-gray-600 dark:text-gray-300">المكتملة</p>
-          <p className="text-xl font-bold text-gray-800 dark:text-white">9</p>
+          <p className="text-xl font-bold text-gray-800 dark:text-white">
+            {stats.completedTasks}
+          </p>
         </div>
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl shadow">
           <Users className="w-6 h-6 mx-auto mb-2 text-purple-600 dark:text-purple-400" />
-          <p className="text-gray-600 dark:text-gray-300">المجموعات</p>
-          <p className="text-xl font-bold text-gray-800 dark:text-white">3</p>
+          <p className="text-gray-600 dark:text-gray-300">مجموعاتي</p>
+          <p className="text-xl font-bold text-gray-800 dark:text-white">
+            {stats.totalGroups}
+          </p>
         </div>
       </div>
 

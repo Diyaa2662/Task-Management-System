@@ -73,7 +73,7 @@ function Login() {
           <p className="text-red-500 text-center mb-4 text-sm">{error}</p>
         )}
 
-        <form className="space-y-4" onSubmit={handleLogin}>
+        <form className="space-y-8" onSubmit={handleLogin}>
           <div>
             <label className="block text-right text-sm mb-1">
               البريد الإلكتروني
@@ -99,15 +99,6 @@ function Login() {
               className="w-full p-3 border rounded-md text-right dark:bg-gray-700 dark:text-white"
               placeholder="••••••••"
             />
-          </div>
-
-          <div className="text-left mt-1">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              هل نسيت كلمة المرور؟
-            </Link>
           </div>
 
           <button

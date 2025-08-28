@@ -13,19 +13,19 @@ function Dashboard() {
       title: "عدد المهام",
       value: 25,
       icon: ClipboardList,
-      color: "from-blue-500 to-blue-700",
+      color: "from-blue-300 to-blue-700",
     },
     {
       title: "المهام المكتملة",
       value: 12,
       icon: CheckCircle2,
-      color: "from-green-500 to-green-700",
+      color: "from-green-300 to-green-700",
     },
     {
       title: "المهام العالقة",
       value: 4,
       icon: AlertTriangle,
-      color: "from-red-500 to-red-700",
+      color: "from-red-300 to-red-700",
     },
   ];
 

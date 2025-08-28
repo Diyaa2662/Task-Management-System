@@ -26,7 +26,7 @@ function Groups() {
       const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-
+      console.log(res);
       if (res.data && Array.isArray(res.data.data)) {
         setGroups(res.data.data);
       } else if (Array.isArray(res.data)) {
@@ -85,15 +85,6 @@ function Groups() {
             المجموعات التي أشارك بها
           </button>
         </div>
-
-        {viewType === "owned" && (
-          <button
-            onClick={() => navigate("/groups/new")}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-          >
-            + إضافة مجموعة
-          </button>
-        )}
       </div>
 
       {/* ✅ عرض البيانات */}
@@ -109,29 +100,53 @@ function Groups() {
           <div
             key={group.id}
             onClick={() => navigate(`/groups/${group.id}`)}
-            className="relative cursor-pointer p-4 bg-white dark:bg-gray-800 border rounded shadow hover:shadow-lg transition"
+            className="relative cursor-pointer p-4 bg-white dark:bg-gray-800 border rounded shadow hover:shadow-lg transition flex flex-col justify-between"
           >
-            <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-1">
-              {group.name}
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-              {group.description || "بدون وصف"}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              👥 عدد الأعضاء: {group.members_count || 0}
-            </p>
+            {/* الاسم والوصف */}
+            <div>
+              <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                {group.name}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                {group.description || "بدون وصف"}
+              </p>
+            </div>
 
-            {/* ✅ زر الحذف أسفل يسار الكرت — يظهر فقط في المجموعات التي أنشأتها */}
+            {/* الأزرار تظهر فقط للمالك */}
             {viewType === "owned" && (
-              <button
-                onClick={(e) => handleDelete(group.id, e)}
-                className="absolute bottom-3 left-3 bg-red-600 text-white text-sm px-3 py-1.5 rounded hover:bg-red-700 transition"
-              >
-                حذف المجموعة
-              </button>
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/groups/${group.id}/edit`);
+                  }}
+                  className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded hover:bg-blue-700 transition"
+                >
+                  تعديل المجموعة
+                </button>
+
+                <button
+                  onClick={(e) => handleDelete(group.id, e)}
+                  className="bg-red-600 text-white text-sm px-3 py-1.5 rounded hover:bg-red-700 transition"
+                >
+                  حذف المجموعة
+                </button>
+              </div>
             )}
           </div>
         ))}
+      </div>
+
+      {/* زر اضافة مجموعة */}
+      <div className="mt-8">
+        {viewType === "owned" && (
+          <button
+            onClick={() => navigate("/groups/new")}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            + إضافة مجموعة
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,33 +1,45 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getCurrentUser, logout } from "../utils/auth";
+import axios from "../api/axios";
+import { getCurrentUser, getToken, logout } from "../utils/auth";
 
 function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
   const navigate = useNavigate();
   const user = getCurrentUser();
 
-  const [notifications, setNotifications] = React.useState([
-    { id: 1, message: "تمت دعوتك للانضمام إلى مجموعة فريق التصميم" },
-    { id: 2, message: "تمت إضافتك إلى مجموعة فريق البرمجة" },
-  ]);
+  const [notifications, setNotifications] = React.useState([]);
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const handleAccept = (id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    alert("✅ تم قبول الدعوة (لاحقًا سيتم الربط مع API)");
-  };
+  React.useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get("/group-members/get-invitations", {
+          headers: { Authorization: `Bearer ${getToken()}` },
+        });
 
-  const handleReject = (id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    alert("❌ تم رفض الدعوة");
-  };
+        const data = res.data?.data ?? [];
+        // نحول البيانات إلى شكل مناسب للعرض
+        const mapped = data.map((inv) => ({
+          id: inv.id,
+          message: `تمت دعوتك للانضمام إلى مجموعة ID: ${inv.group_id}`,
+          role: inv.role,
+        }));
+        setNotifications(mapped);
+      } catch (err) {
+        console.error(
+          "فشل تحميل الإشعارات:",
+          err.response?.data || err.message
+        );
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  // ✅ يغلق قائمة الإشعارات عند الضغط خارجها
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".notification-dropdown")) {
@@ -50,14 +62,12 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
         >
           ☰
         </button>
-
         <Link
           to="/dashboard"
           className="text-2xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400"
         >
           TaskFlow
         </Link>
-
         <div className="hidden sm:flex gap-6">
           <Link
             to="/tasks"
@@ -98,7 +108,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
           </button>
         )}
 
-        {/* ✅ أيقونة الإشعارات وقائمة منسدلة */}
+        {/* الإشعارات */}
         <div className="relative notification-dropdown">
           <button onClick={() => setIsOpen(!isOpen)} className="relative">
             <svg
@@ -135,31 +145,15 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
                 notifications.map((n) => (
                   <div
                     key={n.id}
-                    className="mb-3 p-2 bg-gray-100 dark:bg-gray-700 rounded"
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate("/notifications");
+                    }}
+                    className="mb-3 p-2 bg-gray-100 dark:bg-gray-700 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
                   >
-                    <p
-                      onClick={() => {
-                        setIsOpen(false);
-                        navigate("/notifications");
-                      }}
-                      className="text-sm mb-2 text-gray-800 dark:text-white cursor-pointer hover:underline"
-                    >
+                    <p className="text-sm text-gray-800 dark:text-white">
                       {n.message}
                     </p>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleAccept(n.id)}
-                        className="text-green-600 hover:underline text-sm"
-                      >
-                        قبول
-                      </button>
-                      <button
-                        onClick={() => handleReject(n.id)}
-                        className="text-red-600 hover:underline text-sm"
-                      >
-                        رفض
-                      </button>
-                    </div>
                   </div>
                 ))
               )}
@@ -167,7 +161,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
           )}
         </div>
 
-        {/* أيقونة الملف الشخصي */}
+        {/* الملف الشخصي */}
         <Link to="/profile" title="الملف الشخصي">
           <svg
             xmlns="http://www.w3.org/2000/svg"

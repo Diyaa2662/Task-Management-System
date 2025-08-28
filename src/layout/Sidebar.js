@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Sidebar({ isOpen, onToggleTheme, darkMode }) {
+function Sidebar({ isOpen }) {
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -41,14 +41,6 @@ function Sidebar({ isOpen, onToggleTheme, darkMode }) {
             ))}
           </nav>
         </div>
-
-        {/* زر تغيير الثيم */}
-        <button
-          onClick={onToggleTheme}
-          className="mt-6 text-xl hover:scale-110 transition self-center"
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
       </div>
     </div>
   );

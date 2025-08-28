@@ -1,32 +1,69 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "../api/axios";
+import { getToken } from "../utils/auth";
 
 function EditGroup() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [loading, setLoading] = useState(true);
 
-  // بيانات وهمية مؤقتة (لاحقًا ستأتي من الـ backend)
-  const existingGroup = {
-    id,
-    name: "فريق البرمجة",
-    description: "هذه المجموعة مسؤولة عن تطوير وظائف الموقع وكتابة الكود",
-  };
-
-  const [formData, setFormData] = useState({
-    name: existingGroup.name,
-    description: existingGroup.description,
-  });
+  // ✅ جلب بيانات المجموعة عند تحميل الصفحة
+  useEffect(() => {
+    const fetchGroup = async () => {
+      try {
+        const res = await axios.get(`/groups/${id}`, {
+          headers: { Authorization: `Bearer ${getToken()}` },
+        });
+        if (res.data && res.data.data) {
+          setFormData({
+            name: res.data.data.name || "",
+            description: res.data.data.description || "",
+          });
+        }
+      } catch (err) {
+        console.error(
+          "❌ فشل جلب بيانات المجموعة:",
+          err.response?.data || err.message
+        );
+        alert("فشل جلب بيانات المجموعة");
+        navigate("/groups");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGroup();
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("📌 تم تعديل المجموعة:", formData);
-    // مستقبلاً: إرسال البيانات إلى الـ API
-    navigate("/groups");
+    try {
+      await axios.post(`/groups/${id}/edit`, formData, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      alert("✅ تم تعديل المجموعة بنجاح");
+      navigate(`/groups`);
+    } catch (err) {
+      console.error(
+        "❌ فشل تعديل المجموعة:",
+        err.response?.data || err.message
+      );
+      alert("فشل تعديل المجموعة");
+    }
   };
+
+  if (loading) {
+    return (
+      <p className="text-center text-gray-500 mt-10">
+        جاري تحميل بيانات المجموعة...
+      </p>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center text-right">
@@ -77,7 +114,7 @@ function EditGroup() {
 
             <button
               type="button"
-              onClick={() => navigate("/groups/:id")}
+              onClick={() => navigate(`/groups`)}
               className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition"
             >
               إلغاء
