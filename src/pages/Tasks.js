@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { Eye, Trash2 } from "lucide-react";
 
 function Tasks() {
   const [tasks, setTasks] = useState([]);
@@ -13,21 +14,16 @@ function Tasks() {
     const fetchTasks = async () => {
       try {
         const response = await axios.get("/tasks", {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
+          headers: { Authorization: `Bearer ${getToken()}` },
         });
-
         setTasks(response.data.data || []);
       } catch (err) {
-        // ✅ اطبع الخطأ الكامل إذا موجود
         console.error("❌ فشل جلب المهام:", err.response?.data || err.message);
         setError("حدث خطأ أثناء جلب المهام.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchTasks();
   }, []);
 
@@ -35,25 +31,16 @@ function Tasks() {
     if (!window.confirm("هل أنت متأكد من حذف المهمة؟")) return;
 
     try {
-      const token = getToken();
-
-      // eslint-disable-next-line no-unused-vars
-      const response = await axios.get(`/tasks/${id}/delete`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await axios.get(`/tasks/${id}/delete`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
-
-      // حذف المهمة من الواجهة مباشرة
-      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+      setTasks((prev) => prev.filter((task) => task.id !== id));
     } catch (err) {
       console.error("❌ فشل الحذف:", err);
     }
   };
 
-  const handleFilterChange = (e) => {
-    setFilterStatus(e.target.value);
-  };
+  const handleFilterChange = (e) => setFilterStatus(e.target.value);
 
   const filteredTasks =
     filterStatus === "all"
@@ -62,11 +49,11 @@ function Tasks() {
 
   return (
     <div>
+      {/* عنوان + فلتر + زر إضافة */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
           قائمة المهام
         </h2>
-
         <div className="flex flex-wrap justify-between items-center gap-4">
           <select
             value={filterStatus}
@@ -80,7 +67,6 @@ function Tasks() {
             <option value="3">عالقة</option>
             <option value="4">ملغاة</option>
           </select>
-
           <Link
             to="/tasks/new"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
@@ -108,7 +94,7 @@ function Tasks() {
               key={task.id}
               className="grid grid-cols-12 items-stretch gap-4 p-4 bg-white dark:bg-gray-800 shadow rounded border hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
-              {/* ✅ العنوان والوصف (50%) */}
+              {/* العنوان والوصف */}
               <div className="col-span-12 md:col-span-6 text-right">
                 <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400">
                   {task.title}
@@ -120,20 +106,20 @@ function Tasks() {
                 </p>
               </div>
 
-              {/* ✅ الحالة */}
+              {/* الحالة */}
               <div className="col-span-6 md:col-span-2 flex items-center md:justify-center text-sm">
                 <div
                   className={`w-full h-full px-3 py-2 rounded-md flex items-center justify-center
       ${
         task.status === 0
-          ? "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-100" // قيد الانتظار
+          ? "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-100"
           : task.status === 1
-          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-yellow-100" // قيد التنفيذ
+          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-yellow-100"
           : task.status === 2
-          ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100" // مكتملة
+          ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100"
           : task.status === 4
-          ? "bg-gray-800 text-white dark:bg-black dark:text-white" // ملغاة
-          : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100" // عالقة
+          ? "bg-gray-500 text-white dark:bg-black dark:text-white"
+          : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100"
       }`}
                 >
                   {task.status === 0
@@ -148,7 +134,7 @@ function Tasks() {
                 </div>
               </div>
 
-              {/* ✅ الأولوية */}
+              {/* الأولوية */}
               <div className="col-span-6 md:col-span-2 flex items-center md:justify-center text-sm">
                 <div
                   className={`w-full h-full px-3 py-2 rounded-md flex items-center justify-center
@@ -172,23 +158,23 @@ function Tasks() {
                 </div>
               </div>
 
-              {/* ✅ أزرار التفاصيل والحذف */}
+              {/* الأزرار */}
               <div className="col-span-12 md:col-span-2 flex flex-col gap-2 items-end md:items-center">
                 <Link
                   to={`/tasks/${task.id}`}
-                  className="text-xs font-medium px-3 py-1 rounded-full border border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800 transition"
+                  className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full border border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-800 transition"
                 >
-                  عرض التفاصيل
+                  <Eye className="w-4 h-4" /> عرض التفاصيل
                 </Link>
 
                 <button
-                  className="text-xs font-medium px-3 py-1 rounded-full border border-red-500 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900 dark:text-red-300 dark:border-red-400 dark:hover:bg-red-800 transition"
+                  className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full border border-red-500 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900 dark:text-red-300 dark:border-red-400 dark:hover:bg-red-800 transition"
                   onClick={(e) => {
                     e.preventDefault();
                     handleDelete(task.id);
                   }}
                 >
-                  حذف
+                  <Trash2 className="w-4 h-4" /> حذف
                 </button>
               </div>
             </div>

@@ -1,16 +1,17 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Home, List, Users, Bell, User } from "lucide-react";
 
 function Sidebar({ isOpen }) {
   const location = useLocation();
   const currentPath = location.pathname;
 
   const links = [
-    { path: "/dashboard", label: "لوحة التحكم" },
-    { path: "/tasks", label: "المهام" },
-    { path: "/groups", label: "المجموعات" },
-    { path: "/notifications", label: "الإشعارات" }, // ✅ الإضافة الجديدة
-    { path: "/profile", label: "الملف الشخصي" },
+    { path: "/dashboard", label: "لوحة التحكم", icon: <Home size={18} /> },
+    { path: "/tasks", label: "المهام", icon: <List size={18} /> },
+    { path: "/groups", label: "المجموعات", icon: <Users size={18} /> },
+    { path: "/notifications", label: "الإشعارات", icon: <Bell size={18} /> },
+    { path: "/profile", label: "الملف الشخصي", icon: <User size={18} /> },
   ];
 
   return (
@@ -29,14 +30,14 @@ function Sidebar({ isOpen }) {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`border rounded px-4 py-2 transition-colors
-                  ${
-                    currentPath === link.path
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
+                className={`border rounded px-4 py-2 flex items-center gap-2 transition-colors ${
+                  currentPath === link.path
+                    ? "bg-blue-600 text-white"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
               >
-                {link.label}
+                {link.icon}
+                <span>{link.label}</span>
               </Link>
             ))}
           </nav>

@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "../api/axios";
 import { getCurrentUser, getToken, logout } from "../utils/auth";
+import { Menu, User, LogOut, Bell } from "lucide-react";
 
 function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
   const navigate = useNavigate();
@@ -18,7 +19,6 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
         });
 
         const data = res.data?.data ?? [];
-        // نحول البيانات إلى شكل مناسب للعرض
         const mapped = data.map((inv) => ({
           id: inv.id,
           message: `تمت دعوتك للانضمام إلى مجموعة ID: ${inv.group_id}`,
@@ -60,7 +60,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
           onClick={onToggleSidebar}
           className="text-2xl hover:text-blue-600"
         >
-          ☰
+          <Menu size={28} />
         </button>
         <Link
           to="/dashboard"
@@ -102,29 +102,19 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
         {user && (
           <button
             onClick={handleLogout}
-            className="hidden sm:inline bg-red-300 dark:bg-red-600 text-white px-3 py-1 rounded-full shadow-sm hover:bg-red-700 transition text-sm"
+            className="sm:inline bg-red-300 dark:bg-red-600 text-white px-5 py-1 rounded-full shadow-sm hover:bg-red-700 transition text-sm flex items-center gap-1"
           >
-            تسجيل الخروج
+            <LogOut size={16} />
           </button>
         )}
 
         {/* الإشعارات */}
         <div className="relative notification-dropdown">
           <button onClick={() => setIsOpen(!isOpen)} className="relative">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-6 h-6 text-gray-700 dark:text-white hover:text-blue-600 transition"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
+            <Bell
+              size={20}
+              className="text-gray-700 dark:text-white hover:text-blue-600 transition"
+            />
             {notifications.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                 {notifications.length}
@@ -163,20 +153,10 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
 
         {/* الملف الشخصي */}
         <Link to="/profile" title="الملف الشخصي">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-9 h-9 text-gray-700 dark:text-white hover:text-blue-600 transition"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
+          <User
+            size={28}
+            className="text-gray-700 dark:text-white hover:text-blue-600 transition"
+          />
         </Link>
       </div>
     </header>

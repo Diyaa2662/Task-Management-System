@@ -2,7 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken, getCurrentUser } from "../utils/auth";
-import { X } from "lucide-react";
+import {
+  X,
+  ArrowLeft,
+  Trash2,
+  LogOut,
+  UserPlus,
+  PlusCircle,
+} from "lucide-react";
 
 function GroupDetails() {
   const { id } = useParams();
@@ -76,13 +83,11 @@ function GroupDetails() {
   };
 
   // --- API calls ---
-  // تفاصيل المجموعة + الفئات
   const fetchGroupDetails = async () => {
     try {
       const res = await axios.get(`/groups/${id}`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-
       const data = res.data?.data ?? res.data;
       setGroup(data);
       setCategories(Array.isArray(data?.categories) ? data.categories : []);
@@ -96,21 +101,18 @@ function GroupDetails() {
     }
   };
 
-  // الأعضاء + المالك
   const fetchGroupMembers = async () => {
     try {
       const res = await axios.get(`/groups/${id}/members`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-
       const payload = res.data?.data ?? res.data ?? {};
       const ownerData = payload.owner || null;
       let memberList = Array.isArray(payload.members) ? payload.members : [];
 
-      // تحويل الأدوار من membership.role إذا وجد
       const mappedMembers = memberList.map((m) => ({
         ...m,
-        role: mapRoleNumberToKey(m.membership?.role ?? m.role ?? 3), // 3 كافتراضي (Viewer)
+        role: mapRoleNumberToKey(m.membership?.role ?? m.role ?? 3),
       }));
 
       setOwner(ownerData ? { ...ownerData, role: "Owner" } : null);
@@ -120,13 +122,11 @@ function GroupDetails() {
     }
   };
 
-  // مهام فئة معيّنة
   const fetchTasksByCategory = async (categoryId) => {
     try {
       const res = await axios.get(`/categories/${categoryId}`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-
       const payload = res.data?.data ?? res.data;
       const nextTasks = Array.isArray(payload?.tasks)
         ? payload.tasks
@@ -140,7 +140,6 @@ function GroupDetails() {
     }
   };
 
-  // إضافة فئة
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
     try {
@@ -156,7 +155,6 @@ function GroupDetails() {
     }
   };
 
-  // حذف فئة
   const handleDeleteCategory = async (categoryId) => {
     if (!window.confirm("هل أنت متأكد من حذف هذه الفئة؟")) return;
     try {
@@ -173,7 +171,6 @@ function GroupDetails() {
     }
   };
 
-  // حذف عضو آخر (يستخدمه المالك أو المدير)
   const handleDeleteMember = async (memberId) => {
     if (!window.confirm("هل أنت متأكد من حذف هذا العضو؟")) return;
     try {
@@ -188,15 +185,13 @@ function GroupDetails() {
     }
   };
 
-  // مغادرة المجموعة (يستخدمه العضو الحالي)
   const handleLeaveGroup = async () => {
     if (!window.confirm("هل تريد مغادرة هذه المجموعة؟")) return;
     try {
       await axios.get(`/groups/${id}/leave`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-
-      navigate("/groups"); // رجع المستخدم إلى قائمة المجموعات بعد المغادرة
+      navigate("/groups");
     } catch (err) {
       console.error("فشل مغادرة المجموعة:", err.response?.data || err.message);
     }
@@ -221,7 +216,6 @@ function GroupDetails() {
       </p>
     );
 
-  // حدد دور المستخدم الحالي (مالك أو من قائمة الأعضاء)
   const myRole =
     (owner?.id === currentUser?.id && "Owner") ||
     members.find((m) => m.id === currentUser?.id)?.role ||
@@ -239,7 +233,7 @@ function GroupDetails() {
           className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
           title="العودة إلى المجموعات"
         >
-          ←
+          <ArrowLeft className="w-5 h-5" />
         </Link>
       </div>
 
@@ -249,11 +243,12 @@ function GroupDetails() {
           الأعضاء:
         </h3>
         <ul className="space-y-2">
-          {/* المالك */}
           {owner && (
             <li className="bg-gray-100 dark:bg-gray-700 p-3 rounded flex justify-between items-center">
               <div>
-                <span className="font-semibold">{owner.name}</span>
+                <span className="font-semibold dark:text-white">
+                  {owner.name}{" "}
+                </span>
                 <span className="text-sm text-gray-500 dark:text-gray-300 ml-2">
                   (مالك المجموعة)
                 </span>
@@ -267,20 +262,21 @@ function GroupDetails() {
             </li>
           )}
 
-          {/* الأعضاء */}
           {members.map((member) => (
             <li
               key={member.id}
               className="bg-gray-100 dark:bg-gray-700 p-3 rounded flex justify-between items-center"
             >
               <div>
-                <span className="font-semibold">{member.name}</span>
+                <span className="font-semibold dark:text-white">
+                  {member.name}{" "}
+                </span>
                 <span className="text-sm text-gray-500 dark:text-gray-300 ml-2">
                   ({translateRole(member.role)})
                 </span>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 <Link
                   to={`/groups/${group.id}/members/${member.id}`}
                   className="text-sm text-blue-600 hover:underline"
@@ -288,24 +284,22 @@ function GroupDetails() {
                   عرض
                 </Link>
 
-                {/* زر الحذف يظهر فقط عند المالك أو المدير، وليس عند نفس العضو */}
                 {can(myRole, "manageMembers") &&
                   member.id !== currentUser?.id && (
                     <button
                       onClick={() => handleDeleteMember(member.id)}
-                      className="text-sm text-red-600 hover:underline"
+                      className="flex items-center gap-1 text-sm text-red-600 hover:underline"
                     >
-                      حذف
+                      <Trash2 className="w-4 h-4" /> حذف
                     </button>
                   )}
 
-                {/* زر المغادرة يظهر عند جميع الأعضاء ما عدا المالك */}
                 {member.id === currentUser?.id && myRole !== "Owner" && (
                   <button
                     onClick={handleLeaveGroup}
-                    className="text-sm text-yellow-600 hover:underline"
+                    className="flex items-center gap-1 text-sm text-yellow-600 hover:underline"
                   >
-                    مغادرة
+                    <LogOut className="w-4 h-4" /> مغادرة
                   </button>
                 )}
               </div>
@@ -314,12 +308,12 @@ function GroupDetails() {
         </ul>
 
         {can(myRole, "manageMembers") && (
-          <div className="mt-4">
+          <div className="mt-4 w-36">
             <Link
               to={`/groups/${group.id}/add-member`}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition inline-block"
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
             >
-              + إضافة عضو
+              <UserPlus className="w-5 h-5" /> إضافة عضو
             </Link>
           </div>
         )}
@@ -374,9 +368,9 @@ function GroupDetails() {
             />
             <button
               onClick={handleAddCategory}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+              className="flex items-center gap-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
             >
-              إضافة فئة
+              <PlusCircle className="w-5 h-5" /> إضافة فئة
             </button>
           </div>
         )}
@@ -418,12 +412,12 @@ function GroupDetails() {
         )}
 
         {can(myRole, "manageTasks") && selectedCategory && (
-          <div className="mt-4">
+          <div className="mt-4 w-36">
             <Link
               to={`/categories/${selectedCategory}/add-task?groupId=${group.id}`}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
             >
-              + إضافة مهمة
+              <PlusCircle className="w-5 h-5" /> إضافة مهمة
             </Link>
           </div>
         )}
