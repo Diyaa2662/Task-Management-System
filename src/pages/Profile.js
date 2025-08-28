@@ -8,52 +8,43 @@ function Profile() {
   const navigate = useNavigate();
   const user = getCurrentUser();
 
-  const [stats, setStats] = useState({
-    totalTasks: 0,
-    completedTasks: 0,
-    totalGroups: 0,
-  });
-
-  useEffect(() => {
-    if (!user) return;
-
-    // جلب المهام
-    const fetchTasks = async () => {
-      try {
-        const response = await axios.get("/tasks");
-        if (response.data && response.data.data) {
-          const tasks = response.data.data;
-          const totalTasks = tasks.length;
-          const completedTasks = tasks.filter((t) => t.status === 2).length;
-          setStats((prev) => ({ ...prev, totalTasks, completedTasks }));
-        }
-      } catch (error) {
-        console.error("خطأ في جلب المهام:", error);
-      }
-    };
-
-    // جلب المجموعات التي أنشأها المستخدم
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get("/groups/owned-groups");
-        if (response.data && response.data.data) {
-          const groups = response.data.data;
-          const totalGroups = groups.length;
-          setStats((prev) => ({ ...prev, totalGroups }));
-        }
-      } catch (error) {
-        console.error("خطأ في جلب المجموعات:", error);
-      }
-    };
-
-    fetchTasks();
-    fetchGroups();
-  }, [user]);
+  const [tasksCount, setTasksCount] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [groupsCount, setGroupsCount] = useState(0);
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
+
+  useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+
+    const fetchData = async () => {
+      try {
+        const tasksRes = await axios.get("/tasks");
+        if (mounted && tasksRes.data?.data) {
+          const tasks = tasksRes.data.data;
+          setTasksCount(tasks.length);
+          const completed = tasks.filter((t) => t.status === 2).length;
+          setCompletedCount(completed);
+        }
+
+        const groupsRes = await axios.get("/groups/owned-groups");
+        if (mounted && groupsRes.data?.data) {
+          setGroupsCount(groupsRes.data.data.length);
+        }
+      } catch (error) {
+        console.error("خطأ في جلب البيانات:", error);
+      }
+    };
+
+    fetchData();
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   if (!user) {
     return (
@@ -65,44 +56,14 @@ function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto text-right bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg mt-8 relative min-h-[520px] pb-28">
-      {/* عنوان الصفحة */}
       <h2 className="text-3xl font-extrabold text-gray-800 dark:text-white mb-6">
         الملف الشخصي
       </h2>
 
-      {/* الصورة الشخصية */}
+      {/* الصورة: أول حرف فقط بدون أي تعديل */}
       <div className="flex justify-center mb-4">
-        <div className="relative">
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-            {user.name.charAt(0)}
-          </div>
-          <label className="absolute bottom-0 right-0 bg-white dark:bg-gray-700 border rounded-full p-1 cursor-pointer shadow">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-5 h-5 text-blue-600 dark:text-blue-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.232 5.232l3.536 3.536M9 13h3l9-9a1.414 1.414 0 00-2-2l-9 9v3z"
-              />
-            </svg>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  console.log("الصورة المختارة:", file);
-                }
-              }}
-            />
-          </label>
+        <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+          {user.name.charAt(0)}
         </div>
       </div>
 
@@ -127,21 +88,21 @@ function Profile() {
           <List className="w-6 h-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
           <p className="text-gray-600 dark:text-gray-300">المهام</p>
           <p className="text-xl font-bold text-gray-800 dark:text-white">
-            {stats.totalTasks}
+            {tasksCount}
           </p>
         </div>
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl shadow">
           <CheckSquare className="w-6 h-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
           <p className="text-gray-600 dark:text-gray-300">المكتملة</p>
           <p className="text-xl font-bold text-gray-800 dark:text-white">
-            {stats.completedTasks}
+            {completedCount}
           </p>
         </div>
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl shadow">
           <Users className="w-6 h-6 mx-auto mb-2 text-purple-600 dark:text-purple-400" />
-          <p className="text-gray-600 dark:text-gray-300">مجموعاتي</p>
+          <p className="text-gray-600 dark:text-gray-300">المجموعات</p>
           <p className="text-xl font-bold text-gray-800 dark:text-white">
-            {stats.totalGroups}
+            {groupsCount}
           </p>
         </div>
       </div>

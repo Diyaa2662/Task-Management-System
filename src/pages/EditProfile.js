@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUser } from "../utils/auth";
+import { getCurrentUser, updateUser } from "../utils/auth";
+import axios from "../api/axios";
 
 function EditProfile() {
   const navigate = useNavigate();
+  const user = getCurrentUser();
 
-  const [formData, setFormData] = useState({ name: "", email: "" });
-  const [loading, setLoading] = useState(true); // لحماية الصفحة من إعادة التهيئة
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({ name: "" });
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   useEffect(() => {
-    const user = getCurrentUser();
-
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        email: user.email || "",
-      });
+    if (user && loading) {
+      setFormData({ name: user.name || "" });
+      setLoading(false);
     }
-
-    setLoading(false);
-  }, []);
+  }, [user, loading]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -28,16 +29,62 @@ function EditProfile() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handlePasswordChangeInput = (e) => {
+    setPasswordData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    localStorage.setItem("user", JSON.stringify(formData));
-    navigate("/profile");
+    try {
+      // تعديل الاسم
+      const nameRes = await axios.post("/users/edit-me", formData);
+      if (nameRes.data?.success) {
+        updateUser(nameRes.data.data);
+        alert("تم تعديل الاسم بنجاح!");
+      }
+
+      // تغيير كلمة المرور
+      if (
+        passwordData.oldPassword &&
+        passwordData.newPassword &&
+        passwordData.confirmPassword
+      ) {
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+          alert("كلمة المرور الجديدة وتأكيدها غير متطابقين");
+          return;
+        }
+
+        const fd = new FormData();
+        fd.append("old_password", passwordData.oldPassword);
+        fd.append("new_password", passwordData.newPassword);
+        fd.append("new_password_confirmation", passwordData.confirmPassword);
+
+        const passRes = await axios.post("/auth/change-password", fd, {
+          headers: { Accept: "application/json" },
+        });
+
+        if (passRes.data?.success) {
+          alert("تم تغيير كلمة المرور بنجاح!");
+          setPasswordData({
+            oldPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          });
+        }
+      }
+
+      navigate("/profile");
+    } catch (err) {
+      console.error(err);
+      alert("حدث خطأ أثناء حفظ التعديلات، تحقق من البيانات المدخلة.");
+    }
   };
 
-  const handleCancel = () => {
-    navigate("/profile");
-  };
+  const handleCancel = () => navigate("/profile");
 
   if (loading) return null;
 
@@ -63,16 +110,43 @@ function EditProfile() {
             />
           </div>
 
+          <hr className="my-4 border-gray-300 dark:border-gray-700" />
+
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
-              البريد الإلكتروني
+              كلمة المرور القديمة
             </label>
             <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
+              type="password"
+              name="oldPassword"
+              value={passwordData.oldPassword}
+              onChange={handlePasswordChangeInput}
+              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
+              كلمة المرور الجديدة
+            </label>
+            <input
+              type="password"
+              name="newPassword"
+              value={passwordData.newPassword}
+              onChange={handlePasswordChangeInput}
+              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
+              تأكيد كلمة المرور الجديدة
+            </label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={passwordData.confirmPassword}
+              onChange={handlePasswordChangeInput}
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
             />
           </div>
