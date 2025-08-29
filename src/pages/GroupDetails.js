@@ -197,6 +197,18 @@ function GroupDetails() {
     }
   };
 
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm("هل أنت متأكد من حذف هذه المهمة؟")) return;
+    try {
+      await axios.get(`/tasks/${taskId}/delete`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    } catch (err) {
+      console.error("فشل حذف المهمة:", err.response?.data || err.message);
+    }
+  };
+
   useEffect(() => {
     fetchGroupDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -402,9 +414,22 @@ function GroupDetails() {
                       </p>
                     )}
                   </div>
-                  <span className="text-sm px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded">
-                    {translatePriority(task.priority)}
-                  </span>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded">
+                      {translatePriority(task.priority)}
+                    </span>
+
+                    {can(myRole, "manageTasks") && (
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white hover:bg-red-700 transition"
+                        title="حذف المهمة"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}
