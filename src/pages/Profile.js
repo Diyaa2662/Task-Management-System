@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getCurrentUser, logout } from "../utils/auth";
+import { getCurrentUser, logout, getToken } from "../utils/auth";
 import { LogOut, Edit3, CheckSquare, List, Users } from "lucide-react";
 import axios from "../api/axios";
 
@@ -23,17 +23,23 @@ function Profile() {
 
     const fetchData = async () => {
       try {
-        const tasksRes = await axios.get("/tasks");
-        if (mounted && tasksRes.data?.data) {
-          const tasks = tasksRes.data.data;
-          setTasksCount(tasks.length);
-          const completed = tasks.filter((t) => t.status === 2).length;
-          setCompletedCount(completed);
-        }
+        const tasksRes = await axios.post(
+          "/tasks/my-stat",
+          {},
+          {
+            headers: { Authorization: `Bearer ${getToken()}` },
+          }
+        );
+        if (mounted && tasksRes.data) {
+          const data = tasksRes.data.data ?? tasksRes.data;
+          setTasksCount(data.totals.personal_total ?? 0);
+          setCompletedCount(data.by_status.Complete ?? 0);
 
-        const groupsRes = await axios.get("/groups/owned-groups");
-        if (mounted && groupsRes.data?.data) {
-          setGroupsCount(groupsRes.data.data.length);
+          //  جلب عدد المجموعات
+          const groupsRes = await axios.get("/groups/owned-groups");
+          if (mounted && groupsRes.data?.data) {
+            setGroupsCount(groupsRes.data.data.length);
+          }
         }
       } catch (error) {
         console.error("خطأ في جلب البيانات:", error);
@@ -100,7 +106,7 @@ function Profile() {
         </div>
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl shadow">
           <Users className="w-6 h-6 mx-auto mb-2 text-purple-600 dark:text-purple-400" />
-          <p className="text-gray-600 dark:text-gray-300">المجموعات</p>
+          <p className="text-gray-600 dark:text-gray-300">مجموعاتي</p>
           <p className="text-xl font-bold text-gray-800 dark:text-white">
             {groupsCount}
           </p>

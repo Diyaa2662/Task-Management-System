@@ -27,6 +27,7 @@ function Groups() {
       const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
+      console.log(res);
       if (res.data && Array.isArray(res.data.data)) {
         setGroups(res.data.data);
       } else if (Array.isArray(res.data)) {
