@@ -112,13 +112,13 @@ function Tasks() {
                   className={`w-full h-full px-3 py-2 rounded-md flex items-center justify-center
       ${
         task.status === 0
-          ? "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-100"
-          : task.status === 1
           ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-yellow-100"
+          : task.status === 1
+          ? "bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-100"
           : task.status === 2
           ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100"
-          : task.status === 4
-          ? "bg-gray-500 text-white dark:bg-black dark:text-white"
+          : task.status === 3
+          ? "bg-gray-500 text-white dark:bg-gray-950 dark:text-white"
           : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100"
       }`}
                 >
