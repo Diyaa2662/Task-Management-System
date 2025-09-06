@@ -4,6 +4,7 @@ import axios from "../api/axios";
 import { getToken } from "../utils/auth";
 import { ClipboardList, CheckCircle2, AlertTriangle } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { useToast } from "../components/ToastProvider";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -14,6 +15,7 @@ function Dashboard() {
     by_priority: {},
   });
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,13 +36,14 @@ function Dashboard() {
         });
       } catch (error) {
         console.error("خطأ في جلب بيانات لوحة التحكم:", error);
+        showToast("❌ فشل جلب بيانات لوحة التحكم", "error");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [showToast]);
 
   if (loading) {
     return (
@@ -191,7 +194,7 @@ function Dashboard() {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow flex flex-col justify-between">
           {/* شريط التقدم */}
           <div>
-            <h4 className="text-md font-bold text-gray-800 dark:text-white mb-10">
+            <h4 className="text-xl font-bold text-gray-800 dark:text-white mb-12">
               نسبة الإنجاز
             </h4>
             <div className="flex items-center gap-3">
@@ -221,7 +224,7 @@ function Dashboard() {
           <div className="grid grid-cols-2 gap-6 mt-6">
             {/* حسب الحالة */}
             <div>
-              <h4 className="text-md font-bold text-gray-800 dark:text-white mb-3">
+              <h4 className="text-md font-bold text-gray-800 dark:text-white mb-4">
                 المهام حسب الحالة
               </h4>
               <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">

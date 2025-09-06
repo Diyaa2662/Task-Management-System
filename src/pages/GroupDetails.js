@@ -10,10 +10,13 @@ import {
   UserPlus,
   PlusCircle,
 } from "lucide-react";
+import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/ToastProvider";
 
 function GroupDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [group, setGroup] = useState(null);
   const [owner, setOwner] = useState(null);
@@ -23,6 +26,14 @@ function GroupDetails() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [newCategory, setNewCategory] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // ✅ حالة المودال
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
 
   const currentUser = getCurrentUser();
 
@@ -96,6 +107,7 @@ function GroupDetails() {
         "فشل تحميل بيانات المجموعة:",
         err.response?.data || err.message
       );
+      showToast("فشل تحميل بيانات المجموعة", "error");
     } finally {
       setLoading(false);
     }
@@ -119,6 +131,7 @@ function GroupDetails() {
       setMembers(mappedMembers);
     } catch (err) {
       console.error("فشل تحميل الأعضاء:", err.response?.data || err.message);
+      showToast("فشل تحميل الأعضاء", "error");
     }
   };
 
@@ -137,6 +150,7 @@ function GroupDetails() {
     } catch (err) {
       console.error("فشل تحميل المهام:", err.response?.data || err.message);
       setTasks([]);
+      showToast("فشل تحميل المهام", "error");
     }
   };
 
@@ -150,13 +164,14 @@ function GroupDetails() {
       );
       setNewCategory("");
       fetchGroupDetails();
+      showToast("✅ تم إضافة الفئة بنجاح", "success");
     } catch (err) {
       console.error("فشل إضافة الفئة:", err.response?.data || err.message);
+      showToast("❌ فشل إضافة الفئة", "error");
     }
   };
 
   const handleDeleteCategory = async (categoryId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذه الفئة؟")) return;
     try {
       await axios.get(`/categories/${categoryId}/delete`, {
         headers: { Authorization: `Bearer ${getToken()}` },
@@ -166,13 +181,14 @@ function GroupDetails() {
         setSelectedCategory(null);
         setTasks([]);
       }
+      showToast("✅ تم حذف الفئة بنجاح", "success");
     } catch (err) {
       console.error("فشل حذف الفئة:", err.response?.data || err.message);
+      showToast("❌ فشل حذف الفئة", "error");
     }
   };
 
   const handleDeleteMember = async (memberId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا العضو؟")) return;
     try {
       await axios.post(
         `/groups/${id}/remove-member`,
@@ -180,32 +196,36 @@ function GroupDetails() {
         { headers: { Authorization: `Bearer ${getToken()}` } }
       );
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
+      showToast("✅ تم حذف العضو بنجاح", "success");
     } catch (err) {
       console.error("فشل حذف العضو:", err.response?.data || err.message);
+      showToast("❌ فشل حذف العضو", "error");
     }
   };
 
   const handleLeaveGroup = async () => {
-    if (!window.confirm("هل تريد مغادرة هذه المجموعة؟")) return;
     try {
       await axios.get(`/groups/${id}/leave`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
+      showToast("✅ غادرت المجموعة بنجاح", "success");
       navigate("/groups");
     } catch (err) {
       console.error("فشل مغادرة المجموعة:", err.response?.data || err.message);
+      showToast("❌ فشل مغادرة المجموعة", "error");
     }
   };
 
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذه المهمة؟")) return;
     try {
       await axios.get(`/tasks/${taskId}/delete`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      showToast("✅ تم حذف المهمة بنجاح", "success");
     } catch (err) {
       console.error("فشل حذف المهمة:", err.response?.data || err.message);
+      showToast("❌ فشل حذف المهمة", "error");
     }
   };
 
@@ -235,6 +255,18 @@ function GroupDetails() {
 
   return (
     <div className="max-w-4xl mx-auto text-right bg-white dark:bg-gray-800 p-6 rounded shadow mt-6">
+      {/* ✅ مودال التأكيد */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={() => {
+          confirmModal.onConfirm?.();
+          setConfirmModal({ ...confirmModal, isOpen: false });
+        }}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      />
+
       {/* العنوان وزر العودة */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -249,7 +281,7 @@ function GroupDetails() {
         </Link>
       </div>
 
-      {/* --- الأعضاء --- */}
+      {/* الأعضاء */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           الأعضاء:
@@ -299,7 +331,14 @@ function GroupDetails() {
                 {can(myRole, "manageMembers") &&
                   member.id !== currentUser?.id && (
                     <button
-                      onClick={() => handleDeleteMember(member.id)}
+                      onClick={() =>
+                        setConfirmModal({
+                          isOpen: true,
+                          title: "تأكيد الحذف",
+                          message: "هل أنت متأكد من حذف هذا العضو؟",
+                          onConfirm: () => handleDeleteMember(member.id),
+                        })
+                      }
                       className="flex items-center gap-1 text-sm text-red-600 hover:underline"
                     >
                       <Trash2 className="w-4 h-4" /> حذف
@@ -308,7 +347,14 @@ function GroupDetails() {
 
                 {member.id === currentUser?.id && myRole !== "Owner" && (
                   <button
-                    onClick={handleLeaveGroup}
+                    onClick={() =>
+                      setConfirmModal({
+                        isOpen: true,
+                        title: "مغادرة المجموعة",
+                        message: "هل تريد مغادرة هذه المجموعة؟",
+                        onConfirm: () => handleLeaveGroup(),
+                      })
+                    }
                     className="flex items-center gap-1 text-sm text-yellow-600 hover:underline"
                   >
                     <LogOut className="w-4 h-4" /> مغادرة
@@ -331,7 +377,7 @@ function GroupDetails() {
         )}
       </div>
 
-      {/* --- الفئات --- */}
+      {/* الفئات */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           الفئات:
@@ -357,7 +403,12 @@ function GroupDetails() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteCategory(cat.id);
+                    setConfirmModal({
+                      isOpen: true,
+                      title: "تأكيد الحذف",
+                      message: "هل أنت متأكد من حذف هذه الفئة؟",
+                      onConfirm: () => handleDeleteCategory(cat.id),
+                    });
                   }}
                   className="absolute -top-2 -left-2 hidden group-hover:flex bg-red-600 text-white rounded-full w-5 h-5 items-center justify-center hover:bg-red-700"
                   title="حذف الفئة"
@@ -388,7 +439,7 @@ function GroupDetails() {
         )}
       </div>
 
-      {/* --- المهام --- */}
+      {/* المهام */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
           {selectedCategory ? "مهام الفئة المختارة:" : "اختر فئة لعرض المهام"}
@@ -407,7 +458,9 @@ function GroupDetails() {
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="font-semibold">{task.title}</div>
+                    <div className="font-semibold text-black dark:text-white">
+                      {task.title}
+                    </div>
                     {task.description && (
                       <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                         {task.description}
@@ -422,7 +475,14 @@ function GroupDetails() {
 
                     {can(myRole, "manageTasks") && (
                       <button
-                        onClick={() => handleDeleteTask(task.id)}
+                        onClick={() =>
+                          setConfirmModal({
+                            isOpen: true,
+                            title: "تأكيد الحذف",
+                            message: "هل أنت متأكد من حذف هذه المهمة؟",
+                            onConfirm: () => handleDeleteTask(task.id),
+                          })
+                        }
                         className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white hover:bg-red-700 transition"
                         title="حذف المهمة"
                       >

@@ -3,17 +3,24 @@ import { useNavigate, Link } from "react-router-dom";
 import { getCurrentUser, logout, getToken } from "../utils/auth";
 import { LogOut, Edit3, CheckSquare, List, Users } from "lucide-react";
 import axios from "../api/axios";
+import { useToast } from "../components/ToastProvider";
+import ConfirmModal from "../components/ConfirmModal";
 
 function Profile() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const user = getCurrentUser();
 
   const [tasksCount, setTasksCount] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
   const [groupsCount, setGroupsCount] = useState(0);
 
-  const handleLogout = () => {
+  // ✅ حالة المودال
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleLogoutConfirm = () => {
     logout();
+    showToast("👋 تم تسجيل الخروج بنجاح", "success");
     navigate("/");
   };
 
@@ -30,19 +37,23 @@ function Profile() {
             headers: { Authorization: `Bearer ${getToken()}` },
           }
         );
+
         if (mounted && tasksRes.data) {
           const data = tasksRes.data.data ?? tasksRes.data;
           setTasksCount(data.totals.personal_total ?? 0);
           setCompletedCount(data.by_status.Complete ?? 0);
 
           //  جلب عدد المجموعات
-          const groupsRes = await axios.get("/groups/owned-groups");
+          const groupsRes = await axios.get("/groups/owned-groups", {
+            headers: { Authorization: `Bearer ${getToken()}` },
+          });
           if (mounted && groupsRes.data?.data) {
             setGroupsCount(groupsRes.data.data.length);
           }
         }
       } catch (error) {
         console.error("خطأ في جلب البيانات:", error);
+        showToast("❌ حدث خطأ أثناء جلب بيانات الملف الشخصي", "error");
       }
     };
 
@@ -50,7 +61,7 @@ function Profile() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, showToast]);
 
   if (!user) {
     return (
@@ -66,7 +77,7 @@ function Profile() {
         الملف الشخصي
       </h2>
 
-      {/* الصورة: أول حرف فقط بدون أي تعديل */}
+      {/* الصورة */}
       <div className="flex justify-center mb-4">
         <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
           {user.name.charAt(0)}
@@ -116,7 +127,7 @@ function Profile() {
       {/* الأزرار */}
       <div className="absolute bottom-6 left-6 right-6 flex justify-between">
         <button
-          onClick={handleLogout}
+          onClick={() => setConfirmOpen(true)}
           className="flex items-center gap-2 bg-red-600 text-white px-5 py-2 rounded-xl hover:bg-red-700 transition shadow"
         >
           <LogOut size={18} /> تسجيل الخروج
@@ -129,6 +140,15 @@ function Profile() {
           <Edit3 size={18} /> تعديل الملف الشخصي
         </Link>
       </div>
+
+      {/* ✅ مودال التأكيد */}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="تأكيد تسجيل الخروج"
+        message="هل أنت متأكد أنك تريد تسجيل الخروج؟"
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

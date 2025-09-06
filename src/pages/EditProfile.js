@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser, updateUser } from "../utils/auth";
 import axios from "../api/axios";
+import { useToast } from "../components/ToastProvider";
 
 function EditProfile() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ name: "" });
@@ -40,21 +42,21 @@ function EditProfile() {
     e.preventDefault();
 
     try {
-      // تعديل الاسم
+      // 🔹 تعديل الاسم
       const nameRes = await axios.post("/users/edit-me", formData);
       if (nameRes.data?.success) {
         updateUser(nameRes.data.data);
-        alert("تم تعديل الاسم بنجاح!");
+        showToast("✅ تم تعديل الاسم بنجاح!", "success");
       }
 
-      // تغيير كلمة المرور
+      // 🔹 تغيير كلمة المرور
       if (
         passwordData.oldPassword &&
         passwordData.newPassword &&
         passwordData.confirmPassword
       ) {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-          alert("كلمة المرور الجديدة وتأكيدها غير متطابقين");
+          showToast("❌ كلمة المرور الجديدة وتأكيدها غير متطابقين", "error");
           return;
         }
 
@@ -68,7 +70,7 @@ function EditProfile() {
         });
 
         if (passRes.data?.success) {
-          alert("تم تغيير كلمة المرور بنجاح!");
+          showToast("✅ تم تغيير كلمة المرور بنجاح!", "success");
           setPasswordData({
             oldPassword: "",
             newPassword: "",
@@ -80,7 +82,7 @@ function EditProfile() {
       navigate("/profile");
     } catch (err) {
       console.error(err);
-      alert("حدث خطأ أثناء حفظ التعديلات، تحقق من البيانات المدخلة.");
+      showToast("❌ حدث خطأ أثناء حفظ التعديلات، تحقق من البيانات.", "error");
     }
   };
 
@@ -96,6 +98,7 @@ function EditProfile() {
         </h2>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
+          {/* 🔹 الاسم */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               الاسم
@@ -112,6 +115,7 @@ function EditProfile() {
 
           <hr className="my-4 border-gray-300 dark:border-gray-700" />
 
+          {/* 🔹 كلمة المرور القديمة */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               كلمة المرور القديمة
@@ -125,6 +129,7 @@ function EditProfile() {
             />
           </div>
 
+          {/* 🔹 كلمة المرور الجديدة */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               كلمة المرور الجديدة
@@ -138,6 +143,7 @@ function EditProfile() {
             />
           </div>
 
+          {/* 🔹 تأكيد كلمة المرور */}
           <div>
             <label className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               تأكيد كلمة المرور الجديدة
@@ -151,6 +157,7 @@ function EditProfile() {
             />
           </div>
 
+          {/* 🔘 الأزرار */}
           <div className="flex justify-between mt-6">
             <button
               type="button"

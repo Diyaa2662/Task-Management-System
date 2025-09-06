@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 
 function AddGroup() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -37,19 +39,16 @@ function AddGroup() {
         }
       );
 
-      console.log("✅ تم إنشاء المجموعة:", res.data);
+      showToast("✅ تم إنشاء المجموعة بنجاح", "success");
 
       // بعد الحفظ، نعيد المستخدم لصفحة المجموعات
       navigate("/groups");
     } catch (err) {
-      console.error(
-        "❌ فشل إنشاء المجموعة:",
-        err.response?.data || err.message
-      );
-      setError(
+      const errorMsg =
         err.response?.data?.message ||
-          "حدث خطأ أثناء إنشاء المجموعة، حاول مجددًا."
-      );
+        "❌ حدث خطأ أثناء إنشاء المجموعة، حاول مجددًا.";
+      setError(errorMsg);
+      showToast(errorMsg, "error");
     } finally {
       setLoading(false);
     }

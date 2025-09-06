@@ -3,13 +3,17 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "../api/axios";
 import { getCurrentUser, getToken, logout } from "../utils/auth";
 import { Menu, User, LogOut, Bell } from "lucide-react";
+import { useToast } from "../components/ToastProvider";
+import ConfirmModal from "../components/ConfirmModal";
 
 function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const user = getCurrentUser();
 
   const [notifications, setNotifications] = React.useState([]);
   const [isOpen, setIsOpen] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false); // ✅ مودال التأكيد
 
   React.useEffect(() => {
     const fetchNotifications = async () => {
@@ -37,6 +41,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
 
   const handleLogout = () => {
     logout();
+    showToast("👋 تم تسجيل الخروج بنجاح", "success");
     navigate("/");
   };
 
@@ -101,7 +106,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
 
         {user && (
           <button
-            onClick={handleLogout}
+            onClick={() => setConfirmOpen(true)} // ✅ فتح المودال بدل تسجيل الخروج مباشرة
             className="sm:inline bg-red-300 dark:bg-red-600 text-white px-5 py-1 rounded-full shadow-sm hover:bg-red-700 transition text-sm flex items-center gap-1"
           >
             <LogOut size={16} />
@@ -159,6 +164,15 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
           />
         </Link>
       </div>
+
+      {/* ✅ مودال التأكيد */}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="تأكيد تسجيل الخروج"
+        message="هل أنت متأكد أنك تريد تسجيل الخروج؟"
+        onConfirm={handleLogout}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </header>
   );
 }

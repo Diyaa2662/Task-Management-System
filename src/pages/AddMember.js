@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 
 function AddMember() {
   const navigate = useNavigate();
   const { id } = useParams(); // ID المجموعة
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -40,14 +42,15 @@ function AddMember() {
         },
       });
 
-      alert("✅ تم إرسال دعوة الانضمام بنجاح");
+      showToast("✅ تم إرسال دعوة الانضمام بنجاح", "success");
       navigate(`/groups/${id}`);
     } catch (err) {
       const data = err.response?.data;
-      // أمثلة رسائل التحقق من Laravel
       if (data?.errors) setFieldErrors(data.errors);
       if (data?.message) setServerError(data.message);
       console.error("فشل إضافة العضو:", data || err.message);
+
+      showToast("❌ فشل إضافة العضو. حاول مجددًا", "error");
     } finally {
       setSubmitting(false);
     }

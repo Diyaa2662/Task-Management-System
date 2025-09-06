@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 
 function EditTask() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -40,13 +42,14 @@ function EditTask() {
       } catch (err) {
         console.error("❌ فشل جلب المهمة:", err);
         setError("حدث خطأ أثناء جلب بيانات المهمة.");
+        showToast("❌ فشل جلب بيانات المهمة", "error");
       } finally {
         setLoading(false);
       }
     };
 
     fetchTask();
-  }, [id]);
+  }, [id, showToast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,10 +108,11 @@ function EditTask() {
         }
       );
 
+      showToast("✅ تم تعديل المهمة بنجاح", "success");
       navigate(`/tasks/${id}`);
     } catch (err) {
       console.error("❌ فشل التعديل:", err);
-      alert("حدث خطأ أثناء تعديل المهمة.");
+      showToast("❌ حدث خطأ أثناء تعديل المهمة", "error");
     }
   };
 

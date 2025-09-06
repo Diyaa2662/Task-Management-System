@@ -3,13 +3,25 @@ import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { useToast } from "../components/ToastProvider";
+import ConfirmModal from "../components/ConfirmModal";
 
 function Groups() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewType, setViewType] = useState("owned"); // owned | joined
+
+  // ✅ لحالة الموديل
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
 
   useEffect(() => {
     fetchGroups();
@@ -27,7 +39,7 @@ function Groups() {
       const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-      console.log(res);
+
       if (res.data && Array.isArray(res.data.data)) {
         setGroups(res.data.data);
       } else if (Array.isArray(res.data)) {
@@ -38,24 +50,42 @@ function Groups() {
     } catch (err) {
       console.error("❌ فشل جلب المجموعات:", err.response?.data || err.message);
       setError("فشل جلب المجموعات.");
+      showToast("❌ فشل جلب المجموعات", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (groupId, e) => {
+  const handleDelete = (groupId, e) => {
     e.stopPropagation();
-    if (!window.confirm("هل أنت متأكد من حذف هذه المجموعة؟")) return;
 
-    try {
-      await axios.get(`/groups/${groupId}/delete`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setGroups((prev) => prev.filter((g) => g.id !== groupId));
-    } catch (err) {
-      console.error("❌ فشل حذف المجموعة:", err.response?.data || err.message);
-      alert("فشل حذف المجموعة.");
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: "تأكيد الحذف",
+      message: "هل أنت متأكد أنك تريد حذف هذه المجموعة؟",
+      onConfirm: async () => {
+        try {
+          await axios.get(`/groups/${groupId}/delete`, {
+            headers: { Authorization: `Bearer ${getToken()}` },
+          });
+          setGroups((prev) => prev.filter((g) => g.id !== groupId));
+          showToast("✅ تم حذف المجموعة بنجاح", "success");
+        } catch (err) {
+          console.error(
+            "❌ فشل حذف المجموعة:",
+            err.response?.data || err.message
+          );
+          showToast("❌ فشل حذف المجموعة", "error");
+        } finally {
+          setConfirmModal({
+            isOpen: false,
+            title: "",
+            message: "",
+            onConfirm: null,
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -147,6 +177,22 @@ function Groups() {
           </button>
         )}
       </div>
+
+      {/* موديل التأكيد */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() =>
+          setConfirmModal({
+            isOpen: false,
+            title: "",
+            message: "",
+            onConfirm: null,
+          })
+        }
+      />
     </div>
   );
 }

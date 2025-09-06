@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 import { User, Mail, Star, ArrowLeft } from "lucide-react"; // أيقونات
 
 function MemberDetails() {
   const { id, memberId } = useParams();
+  const { showToast } = useToast();
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,11 +27,16 @@ function MemberDetails() {
 
       const found = allMembers.find((m) => String(m.id) === String(memberId));
       setMember(found || null);
+
+      if (!found) {
+        showToast("❌ لم يتم العثور على العضو", "error");
+      }
     } catch (err) {
       console.error(
         "فشل تحميل بيانات العضو:",
         err.response?.data || err.message
       );
+      showToast("❌ حدث خطأ أثناء تحميل بيانات العضو", "error");
     } finally {
       setLoading(false);
     }

@@ -10,13 +10,16 @@ import {
   Calendar,
   Edit3,
   ArrowLeft,
+  CheckCircle,
 } from "lucide-react";
+import { useToast } from "../components/ToastProvider";
 
 function TaskDetails() {
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -30,12 +33,28 @@ function TaskDetails() {
       } catch (err) {
         console.error("❌ فشل جلب تفاصيل المهمة:", err);
         setError("حدث خطأ أثناء جلب تفاصيل المهمة.");
+        showToast("❌ فشل جلب تفاصيل المهمة", "error");
       } finally {
         setLoading(false);
       }
     };
     fetchTask();
-  }, [id]);
+  }, [id, showToast]);
+
+  const handleCompleteTask = async () => {
+    try {
+      await axios.post(
+        `/tasks/${id}/change-status`,
+        { status: 2 },
+        { headers: { Authorization: `Bearer ${getToken()}` } }
+      );
+      setTask((prev) => ({ ...prev, status: 2 }));
+      showToast("✅ تم إنجاز المهمة بنجاح", "success");
+    } catch (err) {
+      console.error("❌ فشل تحديث المهمة:", err);
+      showToast("❌ حدث خطأ أثناء إنجاز المهمة", "error");
+    }
+  };
 
   if (loading) {
     return (
@@ -100,7 +119,7 @@ function TaskDetails() {
         </p>
       </div>
 
-      <div className="mt-8 flex justify-center gap-4">
+      <div className="mt-8 flex flex-wrap justify-center gap-4">
         <Link
           to={`/tasks/${task.id}/edit`}
           className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition"
@@ -108,6 +127,16 @@ function TaskDetails() {
           <Edit3 className="w-5 h-5" />
           تعديل المهمة
         </Link>
+
+        {task.status !== 2 && (
+          <button
+            onClick={handleCompleteTask}
+            className="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 transition"
+          >
+            <CheckCircle className="w-5 h-5" />
+            إنجاز المهمة
+          </button>
+        )}
 
         <Link
           to="/tasks"

@@ -2,10 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 
 function EditGroup() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { showToast } = useToast();
+
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [loading, setLoading] = useState(true);
 
@@ -27,14 +30,14 @@ function EditGroup() {
           "❌ فشل جلب بيانات المجموعة:",
           err.response?.data || err.message
         );
-        alert("فشل جلب بيانات المجموعة");
+        showToast("❌ فشل جلب بيانات المجموعة", "error");
         navigate("/groups");
       } finally {
         setLoading(false);
       }
     };
     fetchGroup();
-  }, [id, navigate]);
+  }, [id, navigate, showToast]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,14 +49,14 @@ function EditGroup() {
       await axios.post(`/groups/${id}/edit`, formData, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-      alert("✅ تم تعديل المجموعة بنجاح");
+      showToast("✅ تم تعديل المجموعة بنجاح", "success");
       navigate(`/groups`);
     } catch (err) {
       console.error(
         "❌ فشل تعديل المجموعة:",
         err.response?.data || err.message
       );
-      alert("فشل تعديل المجموعة");
+      showToast("❌ فشل تعديل المجموعة", "error");
     }
   };
 

@@ -3,12 +3,20 @@ import { Link } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
 import { Eye, Trash2 } from "lucide-react";
+import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/ToastProvider";
 
 function Tasks() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // ✅ للتأكيد على الحذف
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -27,16 +35,21 @@ function Tasks() {
     fetchTasks();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("هل أنت متأكد من حذف المهمة؟")) return;
+  const handleDelete = async () => {
+    if (!selectedTask) return;
 
     try {
-      await axios.get(`/tasks/${id}/delete`, {
+      await axios.get(`/tasks/${selectedTask.id}/delete`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
-      setTasks((prev) => prev.filter((task) => task.id !== id));
+      setTasks((prev) => prev.filter((task) => task.id !== selectedTask.id));
+      showToast("🗑️ تم حذف المهمة بنجاح", "success");
     } catch (err) {
       console.error("❌ فشل الحذف:", err);
+      showToast("❌ حدث خطأ أثناء حذف المهمة", "error");
+    } finally {
+      setConfirmOpen(false);
+      setSelectedTask(null);
     }
   };
 
@@ -169,9 +182,9 @@ function Tasks() {
 
                 <button
                   className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full border border-red-500 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900 dark:text-red-300 dark:border-red-400 dark:hover:bg-red-800 transition"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleDelete(task.id);
+                  onClick={() => {
+                    setSelectedTask(task);
+                    setConfirmOpen(true);
                   }}
                 >
                   <Trash2 className="w-4 h-4" /> حذف
@@ -181,6 +194,22 @@ function Tasks() {
           ))
         )}
       </div>
+
+      {/* ✅ مودال التأكيد */}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="تأكيد الحذف"
+        message={
+          selectedTask
+            ? `هل أنت متأكد أنك تريد حذف المهمة: "${selectedTask.title}"؟`
+            : "هل أنت متأكد أنك تريد الحذف؟"
+        }
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setSelectedTask(null);
+        }}
+      />
     </div>
   );
 }

@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 
 function AddTaskToCategory() {
   const navigate = useNavigate();
   const { categoryId } = useParams(); // ID الفئة
   const location = useLocation();
+  const { showToast } = useToast();
 
-  // استخرج groupId من query أو state (حسب كيف تستدعي الصفحة)
+  // استخرج groupId من query أو state
   const searchParams = new URLSearchParams(location.search);
   const groupId = searchParams.get("groupId");
 
@@ -40,6 +42,9 @@ function AddTaskToCategory() {
           headers: { Authorization: `Bearer ${getToken()}` },
         }
       );
+
+      showToast("✅ تم إضافة المهمة إلى الفئة بنجاح", "success");
+
       // بعد نجاح الإضافة، العودة إلى صفحة تفاصيل المجموعة
       if (groupId) {
         navigate(`/groups/${groupId}`);
@@ -47,8 +52,8 @@ function AddTaskToCategory() {
         navigate(-1); // fallback
       }
     } catch (err) {
-      console.error("فشل إضافة المهمة:", err.response?.data || err.message);
-      alert("حدث خطأ أثناء إضافة المهمة");
+      console.error("❌ فشل إضافة المهمة:", err.response?.data || err.message);
+      showToast("❌ حدث خطأ أثناء إضافة المهمة", "error");
     } finally {
       setLoading(false);
     }

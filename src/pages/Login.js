@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { login } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 
 function Login() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [darkMode, setDarkMode] = useState(() => {
     const storedTheme = localStorage.getItem("theme");
@@ -15,8 +17,6 @@ function Login() {
     email: "",
     password: "",
   });
-
-  const [error, setError] = useState("");
 
   const toggleTheme = () => {
     const newMode = !darkMode;
@@ -39,7 +39,6 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
 
     try {
       const response = await axios.post("/auth/login", formData);
@@ -50,10 +49,11 @@ function Login() {
       login(user, token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+      showToast("✅ تم تسجيل الدخول بنجاح", "success");
       navigate("/dashboard");
     } catch (err) {
       console.error("❌ فشل تسجيل الدخول:", err);
-      setError("فشل تسجيل الدخول. تحقق من البريد وكلمة المرور.");
+      showToast("❌ فشل تسجيل الدخول. تحقق من البريد وكلمة المرور.", "error");
     }
   };
 
@@ -68,10 +68,6 @@ function Login() {
 
       <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-3xl font-bold mb-6 text-center">تسجيل الدخول</h2>
-
-        {error && (
-          <p className="text-red-500 text-center mb-4 text-sm">{error}</p>
-        )}
 
         <form className="space-y-8" onSubmit={handleLogin}>
           <div>

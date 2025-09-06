@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
 
 function AddTask() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -18,7 +20,6 @@ function AddTask() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: name === "status" || name === "priority" ? Number(value) : value,
@@ -32,13 +33,13 @@ function AddTask() {
     try {
       const token = getToken();
 
-      // 1. تجهيز البيانات الأساسية (بدون الحالة والأولوية)
+      // 1. تجهيز البيانات الأساسية
       const data = new FormData();
       data.append("title", formData.title);
       data.append("description", formData.description);
       data.append("due_date", formData.dueDate);
 
-      // 2. إرسال الطلب الأول: إنشاء المهمة
+      // 2. إنشاء المهمة
       const response = await axios.post("/tasks/create", data, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -48,32 +49,25 @@ function AddTask() {
 
       const taskId = response.data.data.id;
 
-      // 3. إرسال الحالة
+      // 3. تغيير الحالة
       await axios.post(
         `/tasks/${taskId}/change-status`,
         { status: Number(formData.status) },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // 4. إرسال الأولوية
+      // 4. تغيير الأولوية
       await axios.post(
         `/tasks/${taskId}/change-priority`,
         { priority: Number(formData.priority) },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      showToast("✅ تم إضافة المهمة بنجاح", "success");
       navigate("/tasks");
     } catch (err) {
       console.error("❌ فشل إضافة المهمة:", err);
-      alert("حدث خطأ أثناء إضافة المهمة. تأكد من البيانات وحاول مرة أخرى.");
+      showToast("❌ حدث خطأ أثناء إضافة المهمة. حاول مجددًا.", "error");
     } finally {
       setLoading(false);
     }

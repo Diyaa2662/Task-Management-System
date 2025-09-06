@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../api/axios";
+import { useToast } from "../components/ToastProvider";
 
 function Register() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [darkMode, setDarkMode] = useState(() => {
     const storedTheme = localStorage.getItem("theme");
@@ -36,12 +38,12 @@ function Register() {
     e.preventDefault();
 
     if (formData.password.length < 8) {
-      alert("كلمة المرور يجب أن تكون 8 محارف على الأقل.");
+      showToast("❌ كلمة المرور يجب أن تكون 8 محارف على الأقل", "error");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert("كلمتا المرور غير متطابقتين.");
+      showToast("❌ كلمتا المرور غير متطابقتين", "error");
       return;
     }
 
@@ -54,11 +56,14 @@ function Register() {
 
       console.log("✅ تم التسجيل بنجاح:", response.data);
 
-      alert("🎉 تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول.");
+      showToast("🎉 تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول", "success");
       navigate("/login");
     } catch (error) {
       console.error("❌ فشل التسجيل:", error.response?.data || error.message);
-      alert("فشل التسجيل: تأكد من صحة البيانات أو أن الإيميل مستخدم.");
+      showToast(
+        "❌ فشل التسجيل: تأكد من صحة البيانات أو أن الإيميل غير مستخدم",
+        "error"
+      );
     }
   };
 
