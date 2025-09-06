@@ -25,7 +25,7 @@ function AddGroup() {
     setError("");
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "/groups/create",
         {
           name: formData.name,
