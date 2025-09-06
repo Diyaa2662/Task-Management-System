@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getCurrentUser, logout, getToken } from "../utils/auth";
-import { LogOut, Edit3, CheckSquare, List, Users } from "lucide-react";
+import {
+  LogOut,
+  Edit3,
+  CheckSquare,
+  List,
+  Users,
+  ArrowLeft,
+} from "lucide-react";
 import axios from "../api/axios";
 import { useToast } from "../components/ToastProvider";
 import ConfirmModal from "../components/ConfirmModal";
@@ -73,10 +80,19 @@ function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto text-right bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg mt-8 relative min-h-[520px] pb-28">
-      <h2 className="text-3xl font-extrabold text-gray-800 dark:text-white mb-6">
-        الملف الشخصي
-      </h2>
-
+      {/* العنوان وزر العودة */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-extrabold text-gray-800 dark:text-white mb-6">
+          الملف الشخصي
+        </h2>
+        <Link
+          to="/dashboard"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          title="العودة إلى الصفحة الرئيسية"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+      </div>
       {/* الصورة */}
       <div className="flex justify-center mb-4">
         <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
