@@ -13,23 +13,22 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
 
   const [notifications, setNotifications] = React.useState([]);
   const [isOpen, setIsOpen] = React.useState(false);
-  const [confirmOpen, setConfirmOpen] = React.useState(false); // ✅ مودال التأكيد
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   React.useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await axios.get("/group-members/get-invitations", {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        });
+        const res = await axios.get(
+          "/notifications?page=1&perPage=15&only=all",
+          {
+            headers: { Authorization: `Bearer ${getToken()}` },
+          }
+        );
 
-        const data = res.data?.data ?? [];
-        const mapped = data.map((inv) => ({
-          id: inv.id,
-          message: `تمت دعوتك للانضمام إلى مجموعة ID: ${inv.group_id}`,
-          role: inv.role,
-        }));
-        setNotifications(mapped);
+        const list = res.data?.data?.data ?? [];
+        setNotifications(list);
       } catch (err) {
+        showToast("فشل تحميل الإشعارات");
         console.error(
           "فشل تحميل الإشعارات:",
           err.response?.data || err.message
@@ -37,7 +36,10 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
       }
     };
     fetchNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const handleLogout = () => {
     logout();
@@ -106,7 +108,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
 
         {user && (
           <button
-            onClick={() => setConfirmOpen(true)} // ✅ فتح المودال بدل تسجيل الخروج مباشرة
+            onClick={() => setConfirmOpen(true)}
             className="sm:inline bg-red-300 dark:bg-red-600 text-white px-5 py-1 rounded-full shadow-sm hover:bg-red-700 transition text-sm flex items-center gap-1"
           >
             <LogOut size={16} />
@@ -120,9 +122,9 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
               size={20}
               className="text-gray-700 dark:text-white hover:text-blue-600 transition"
             />
-            {notifications.length > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                {notifications.length}
+                {unreadCount}
               </span>
             )}
           </button>
@@ -137,17 +139,17 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
                   لا توجد إشعارات حالياً.
                 </p>
               ) : (
-                notifications.map((n) => (
+                notifications.slice(0, 5).map((n) => (
                   <div
                     key={n.id}
                     onClick={() => {
                       setIsOpen(false);
                       navigate("/notifications");
                     }}
-                    className="mb-3 p-2 bg-gray-100 dark:bg-gray-700 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
+                    className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
                   >
                     <p className="text-sm text-gray-800 dark:text-white">
-                      {n.message}
+                      {n.content}
                     </p>
                   </div>
                 ))
@@ -165,7 +167,7 @@ function Navbar({ onToggleSidebar, onToggleTheme, darkMode }) {
         </Link>
       </div>
 
-      {/* ✅ مودال التأكيد */}
+      {/* مودال التأكيد */}
       <ConfirmModal
         isOpen={confirmOpen}
         title="تأكيد تسجيل الخروج"

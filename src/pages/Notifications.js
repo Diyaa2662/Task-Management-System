@@ -1,93 +1,103 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/axios";
 import { getToken } from "../utils/auth";
+import { useToast } from "../components/ToastProvider";
+import { CheckCircle, XCircle, MailOpen, Trash2 } from "lucide-react";
 
 function Notifications() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
+  const { showToast } = useToast();
 
-  // جلب الدعوات
-  const fetchInvitations = async () => {
+  const roleLabel = (r) => {
+    switch (Number(r)) {
+      case 0:
+        return "مدير المجموعة";
+      case 1:
+        return "مكلف";
+      case 2:
+        return "إداري المجموعة";
+      default:
+        return `دور #${r}`;
+    }
+  };
+
+  const fetchNotifications = async () => {
     setLoading(true);
     setErr(null);
     try {
-      const res = await axios.get("/group-members/get-invitations", {
+      const res = await axios.get("/notifications?page=1&perPage=15&only=all", {
         headers: { Authorization: `Bearer ${getToken()}` },
-      }); // :contentReference[oaicite:2]{index=2}
-
-      // حاول ندخل على أماكن شائعة للبيانات (data.data | data | [])
-      const payload = res.data?.data ?? res.data ?? [];
-      const list = Array.isArray(payload) ? payload : payload.invitations ?? [];
-
+      });
+      const list = res.data?.data?.data ?? [];
       setItems(list);
     } catch (e) {
-      console.error("فشل جلب الدعوات:", e.response?.data || e.message);
-      setErr(e.response?.data?.message || "فشل جلب الدعوات");
+      const msg = e.response?.data?.message || "فشل جلب الإشعارات";
+      setErr(msg);
+      showToast(`❌ ${msg}`, "error");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInvitations();
+    fetchNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const roleLabel = (r) => {
-    // يدعم رقم أو نص
-    if (typeof r === "number") {
-      switch (r) {
-        case 0:
-          return "مدير المجموعة";
-        case 1:
-          return "مكلّف";
-        case 2:
-          return "إداري المجموعة";
-        case 3:
-          return "قارئ";
-        default:
-          return `دور #${r}`;
-      }
+  const markAsRead = async (id) => {
+    try {
+      await axios.get(`/notifications/${id}/mark-as-read`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      setItems((prev) =>
+        prev.map((n) =>
+          String(n.id) === String(id) ? { ...n, is_read: true } : n
+        )
+      );
+      showToast("✅ تم تعليم الإشعار كمقروء", "success");
+    } catch (e) {
+      const msg = e.response?.data?.message || "خطأ عند تعليم الإشعار";
+      showToast(`❌ ${msg}`, "error");
     }
-    // نصوص محتملة من الباك
-    if (!r) return "دور غير محدد";
-    const v = String(r).toLowerCase();
-    if (v.includes("admin")) return "مدير المجموعة";
-    if (v.includes("manager")) return "إداري المجموعة";
-    if (v.includes("assignee")) return "مكلّف";
-    return r;
   };
 
-  const getGroupName = (inv) =>
-    inv.group?.name ||
-    inv.group?.title ||
-    inv.group_name ||
-    inv.group_title ||
-    (inv.group_id ? `مجموعة #${inv.group_id}` : "مجموعة غير معروفة");
-
-  const getInviterName = (inv) =>
-    inv.inviter?.name ||
-    inv.sender?.name ||
-    inv.inviter_name ||
-    inv.sender_name ||
-    "مرسل غير معروف";
-
-  // قبول/رفض الدعوة
-  const answerInvitation = async (invitationId, acceptValue) => {
+  const answerInvitation = async (notification, acceptValue) => {
     try {
+      const invitationId = notification.data?.invitation_id;
+      if (!invitationId) {
+        showToast("❌ لم يتم العثور على رقم الدعوة", "error");
+        return;
+      }
+
       const form = new FormData();
-      form.append("accept", String(acceptValue)); // لازم form-data بالحقل accept = 1/0 :contentReference[oaicite:3]{index=3}
+      form.append("accept", String(acceptValue));
+
       await axios.post(`/group-members/${invitationId}/answer`, form, {
         headers: { Authorization: `Bearer ${getToken()}` },
-      }); // :contentReference[oaicite:4]{index=4}
+      });
 
-      // شيل الدعوة من اللستة
-      setItems((prev) =>
-        prev.filter((x) => String(x.id) !== String(invitationId))
+      showToast(
+        acceptValue ? "✅ تم قبول الدعوة بنجاح" : "❌ تم رفض الدعوة",
+        acceptValue ? "success" : "info"
       );
     } catch (e) {
-      console.error("خطأ بالقبول/الرفض:", e.response?.data || e.message);
-      alert(e.response?.data?.message || "حدث خطأ أثناء معالجة الدعوة");
+      const msg = e.response?.data?.message || "خطأ أثناء معالجة الدعوة";
+      showToast(`❌ ${msg}`, "error");
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      await axios.get(`/notifications/${id}/delete`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      setItems((prev) => prev.filter((n) => String(n.id) !== String(id)));
+      showToast("🗑️ تم حذف الإشعار بنجاح", "success");
+    } catch (e) {
+      const msg = e.response?.data?.message || "خطأ أثناء حذف الإشعار";
+      showToast(`❌ ${msg}`, "error");
     }
   };
 
@@ -112,42 +122,71 @@ function Notifications() {
         </p>
       ) : (
         <ul className="space-y-4">
-          {items.map((inv) => {
-            const groupName = getGroupName(inv);
-            const inviterName = getInviterName(inv);
-            const invId = inv.id ?? inv.invitation_id ?? inv.group_member_id; // يدعم تسميات ID مختلفة
-            const r = roleLabel(inv.role);
+          {items.map((n) => (
+            <li
+              key={n.id}
+              className={`p-4 rounded shadow-sm ${
+                n.is_read
+                  ? "bg-gray-100 dark:bg-gray-700"
+                  : "bg-blue-300 dark:bg-blue-600"
+              }`}
+            >
+              {/* العنوان */}
+              <p className="text-sm font-semibold text-gray-800 dark:text-white mb-1">
+                {n.title}
+              </p>
 
-            return (
-              <li
-                key={invId}
-                className="p-4 bg-gray-100 dark:bg-gray-700 rounded shadow-sm"
-              >
-                <p className="text-sm text-gray-800 dark:text-white mb-1">
-                  دعوة للانضمام إلى{" "}
-                  <span className="font-semibold">{groupName}</span>
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
-                  من: <span className="font-medium">{inviterName}</span> — الدور
-                  المقترح: <span className="font-medium">{r}</span>
-                </p>
-                <div className="flex justify-end gap-4">
-                  <button
-                    onClick={() => answerInvitation(invId, 1)}
-                    className="text-sm text-green-600 hover:underline"
-                  >
-                    قبول
-                  </button>
-                  <button
-                    onClick={() => answerInvitation(invId, 0)}
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    رفض
-                  </button>
+              {/* المحتوى + الدور */}
+              <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
+                {n.content}
+                {n.data?.role !== undefined && (
+                  <>
+                    {" بدور "}
+                    <span className="font-medium">
+                      {roleLabel(n.data.role)}
+                    </span>
+                  </>
+                )}
+              </p>
+
+              {/* الأزرار تحت الإشعار */}
+              <div className="flex justify-between items-center border-t pt-3 mt-3 border-gray-300 dark:border-gray-600">
+                {/* يسار: القبول/الرفض أو الحذف */}
+                <div className="flex gap-2">
+                  <>
+                    <button
+                      onClick={() => answerInvitation(n, 1)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-800 dark:text-green-100 dark:hover:bg-green-700 transition"
+                    >
+                      <CheckCircle size={16} /> قبول
+                    </button>
+                    <button
+                      onClick={() => answerInvitation(n, 0)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700 transition"
+                    >
+                      <XCircle size={16} /> رفض
+                    </button>
+                    <button
+                      onClick={() => deleteNotification(n.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700 transition"
+                    >
+                      <Trash2 size={16} /> حذف
+                    </button>
+                  </>
                 </div>
-              </li>
-            );
-          })}
+
+                {/* يمين: تعليم كمقروء */}
+                {!n.is_read && (
+                  <button
+                    onClick={() => markAsRead(n.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-800 dark:text-blue-100 dark:hover:bg-blue-700 transition"
+                  >
+                    <MailOpen size={16} /> تعليم كمقروء
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
         </ul>
       )}
     </div>
